@@ -61,30 +61,30 @@ async function runTests() {
     assert.strictEqual(resArt.status, 200);
     assert.strictEqual(resArt.body.status, 'success');
 
-    // Test 4: Create incident
+    // Test 4: Create incident for user 4 (Esteban Reniero)
     console.log('Test 4: Create incident...');
     const resCreate = await request('POST', '/api/v1/incidencias', {
       id_articulo: 1,
-      creado_por: 1,
-      prioridad: 2,
-      descripcion_pedido: 'El monitor de la PC no da video.'
+      creado_por: 4,
+      prioridad: 1,
+      descripcion_pedido: 'El mouse sin pilas no funciona'
     });
     assert.strictEqual(resCreate.status, 201);
     assert.strictEqual(resCreate.body.status, 'success');
 
-    // Test 5: List incidents
+    // Test 5: List incidents for user 4
     console.log('Test 5: List incidents...');
-    const resInc = await request('GET', '/api/v1/incidencias/mis-incidencias?id_usuario=1');
+    const resInc = await request('GET', '/api/v1/incidencias/mis-incidencias?id_usuario=4');
     assert.strictEqual(resInc.status, 200);
     assert.strictEqual(resInc.body.status, 'success');
 
-    // Test 6: Cancel incident
+    // Test 6: Cancel incident #1 created by user 4
     console.log('Test 6: Cancel pending incident...');
-    const resCancel = await request('PUT', '/api/v1/incidencias/1/cancelar', { id_usuario: 1 });
+    const resCancel = await request('PUT', '/api/v1/incidencias/1/cancelar', { id_usuario: 4 });
     assert.strictEqual(resCancel.status, 200);
     assert.strictEqual(resCancel.body.status, 'success');
 
-    console.log('\n✅ TODAS LAS PRUEBAS PASARON EXITOSAMENTE!');
+    console.log('\n✅ TODAS LAS PRUEBAS PASARON EXITOSAMENTE CON LA NUEVA BASE DE DATOS!');
   } catch (err) {
     console.error('\n❌ ERROR EN PRUEBAS:', err);
     process.exitCode = 1;

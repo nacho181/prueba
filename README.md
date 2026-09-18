@@ -33,8 +33,7 @@ El sistema fue diseñado bajo una arquitectura cliente-servidor (**API REST**) d
 
 ```text
 ├── database/
-│   ├── schema.sql           # Estructura de tablas PostgreSQL (areas, categorias, articulos, usuarios, estados, incidencias, incidencias_estados)
-│   └── seed.sql             # Datos iniciales de prueba para la Municipalidad de Concordia
+│   └── incidencias_db.sql   # Dump de PostgreSQL con la estructura de tablas y datos iniciales de la Municipalidad de Concordia
 ├── public/                  # FRONTEND (Cliente Web)
 │   ├── index.html           # Interfaz de usuario estructurada con Bootstrap 5
 │   ├── css/styles.css       # Estilos y personalización de la paleta verde institucional
@@ -67,17 +66,12 @@ Abre tu consola de PostgreSQL (`psql` o PgAdmin) y crea la base de datos:
 CREATE DATABASE incidencias_concordia;
 ```
 
-### Paso B: Ejecutar los Scripts SQL
-Ejecuta los dos archivos contenidos en la carpeta `database/` para crear las tablas e insertar los datos iniciales de prueba:
+### Paso B: Ejecutar el Dump de Base de Datos
+Ejecuta el archivo `incidencias_db.sql` contenido en la carpeta `database/` para crear las tablas e insertar los datos iniciales de prueba:
 
-1. **Crear las Tablas:**
-   ```bash
-   psql -U postgres -d incidencias_concordia -f database/schema.sql
-   ```
-2. **Cargar Datos de Prueba (Sembrado/Seed):**
-   ```bash
-   psql -U postgres -d incidencias_concordia -f database/seed.sql
-   ```
+```bash
+psql -U postgres -d incidencias_concordia -f database/incidencias_db.sql
+```
 
 ### Paso C: Configurar las Credenciales en el Código (`.env`)
 El código lee las credenciales del archivo `.env` mediante la librería `dotenv` en el archivo `src/config/db.js`.
