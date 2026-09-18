@@ -19,15 +19,6 @@ async function initApp() {
 }
 
 function setupEventListeners() {
-    // Navigation Tabs
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const targetTab = btn.getAttribute('data-tab');
-            switchTab(targetTab);
-        });
-    });
-
     // Employee Switcher
     const selectEmpleado = document.getElementById('selectEmpleado');
     selectEmpleado.addEventListener('change', (e) => {
@@ -53,13 +44,12 @@ function setupEventListeners() {
     });
 }
 
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
-    });
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.toggle('active', content.id === tabId);
-    });
+function switchTab(tabButtonId) {
+    const triggerEl = document.getElementById(tabButtonId);
+    if (triggerEl && window.bootstrap) {
+        const tab = new bootstrap.Tab(triggerEl);
+        tab.show();
+    }
 }
 
 // 1. Fetch Employees
@@ -85,7 +75,7 @@ async function cargarEmpleados() {
             }
         }
     } catch (error) {
-        showToast('Error al cargar la lista de empleados', 'error');
+        showToast('Error al cargar la lista de empleados', 'danger');
     }
 }
 
@@ -101,7 +91,7 @@ async function cargarArticulos() {
             renderArticulosGrid(articulos);
         }
     } catch (error) {
-        showToast('Error al cargar el catálogo de artículos', 'error');
+        showToast('Error al cargar el catálogo de artículos', 'danger');
     }
 }
 
@@ -122,26 +112,30 @@ function renderArticulosGrid(lista) {
     gridContainer.innerHTML = '';
 
     if (lista.length === 0) {
-        gridContainer.innerHTML = '<div class="text-muted text-center" style="grid-column: 1/-1;">No se encontraron artículos.</div>';
+        gridContainer.innerHTML = '<div class="col-12 text-center text-muted py-4">No se encontraron artículos.</div>';
         return;
     }
 
     lista.forEach(art => {
-        const card = document.createElement('div');
-        card.className = 'article-card';
-        card.innerHTML = `
-            <div>
-                <h4>${escapeHtml(art.descripcion)}</h4>
-                <div class="article-meta">
-                    <strong>Categoría:</strong> ${escapeHtml(art.categoria_nombre || 'N/A')}<br>
-                    <strong>Área:</strong> ${escapeHtml(art.area_nombre || 'N/A')}
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4';
+        col.innerHTML = `
+            <div class="card h-100 shadow-sm border-0 article-card p-3">
+                <div class="card-body d-flex flex-column justify-content-between p-0">
+                    <div>
+                        <h4 class="h6 fw-bold text-concordia-dark mb-2">${escapeHtml(art.descripcion)}</h4>
+                        <p class="small text-muted mb-3">
+                            <strong>Categoría:</strong> ${escapeHtml(art.categoria_nombre || 'N/A')}<br>
+                            <strong>Área:</strong> ${escapeHtml(art.area_nombre || 'N/A')}
+                        </p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-concordia w-100 mt-2 fw-semibold" onclick="seleccionarArticuloParaReporte(${art.id_articulo})">
+                        Reportar Falla
+                    </button>
                 </div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="seleccionarArticuloParaReporte(${art.id_articulo})">
-                Reportar Falla
-            </button>
         `;
-        gridContainer.appendChild(card);
+        gridContainer.appendChild(col);
     });
 }
 
@@ -156,7 +150,7 @@ function filtrarArticulos(query) {
 }
 
 function seleccionarArticuloParaReporte(idArticulo) {
-    switchTab('tab-nueva-incidencia');
+    switchTab('btn-nueva-incidencia');
     const selectArticulo = document.getElementById('selectArticulo');
     selectArticulo.value = idArticulo;
 }
@@ -164,7 +158,7 @@ function seleccionarArticuloParaReporte(idArticulo) {
 // 3. Fetch Incidents
 async function cargarMisIncidencias() {
     const tbody = document.getElementById('tbodyIncidencias');
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Cargando incidencias...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Cargando incidencias...</td></tr>';
 
     try {
         const response = await fetch(`${API_BASE_URL}/incidencias/mis-incidencias?id_usuario=${currentUsuarioId}`);
@@ -175,8 +169,8 @@ async function cargarMisIncidencias() {
             renderIncidenciasTabla(incidencias);
         }
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Error al obtener las incidencias.</td></tr>';
-        showToast('Error al obtener las incidencias', 'error');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Error al obtener las incidencias.</td></tr>';
+        showToast('Error al obtener las incidencias', 'danger');
     }
 }
 
@@ -185,7 +179,7 @@ function renderIncidenciasTabla(lista) {
     tbody.innerHTML = '';
 
     if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No tienes incidencias registradas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No tienes incidencias registradas.</td></tr>';
         return;
     }
 
@@ -212,20 +206,20 @@ function renderIncidenciasTabla(lista) {
         let accionesHtml = '<span class="text-muted">-</span>';
         if (inc.id_estado === 1) { // Only allow cancel if 'Pendiente'
             accionesHtml = `
-                <button class="btn btn-danger" onclick="cancelarIncidencia(${inc.id_incidencia})">
+                <button class="btn btn-sm btn-danger px-2 py-1 fw-semibold" onclick="cancelarIncidencia(${inc.id_incidencia})">
                     Cancelar
                 </button>
             `;
         }
 
         tr.innerHTML = `
-            <td><strong>#${inc.id_incidencia}</strong></td>
-            <td>${fechaFormateada}</td>
+            <td class="fw-bold">#${inc.id_incidencia}</td>
+            <td class="small">${fechaFormateada}</td>
             <td>${escapeHtml(inc.articulo_nombre || 'Artículo #' + inc.id_articulo)}</td>
-            <td>${escapeHtml(inc.descripcion_pedido)}</td>
+            <td class="small">${escapeHtml(inc.descripcion_pedido)}</td>
             <td>${prioBadge}</td>
             <td>${estadoBadge}</td>
-            <td>${accionesHtml}</td>
+            <td class="text-end">${accionesHtml}</td>
         `;
 
         tbody.appendChild(tr);
@@ -251,7 +245,7 @@ async function handleCrearIncidencia(e) {
     const descripcion_pedido = document.getElementById('txtDescripcion').value.trim();
 
     if (!id_articulo || !descripcion_pedido) {
-        showToast('Por favor completa todos los campos requeridos', 'error');
+        showToast('Por favor completa todos los campos requeridos', 'danger');
         return;
     }
 
@@ -275,12 +269,12 @@ async function handleCrearIncidencia(e) {
             showToast('Incidencia registrada con éxito', 'success');
             document.getElementById('formNuevaIncidencia').reset();
             await cargarMisIncidencias();
-            switchTab('tab-mis-incidencias');
+            switchTab('btn-mis-incidencias');
         } else {
-            showToast(result.message || 'Error al crear la incidencia', 'error');
+            showToast(result.message || 'Error al crear la incidencia', 'danger');
         }
     } catch (error) {
-        showToast('Error de conexión al servidor', 'error');
+        showToast('Error de conexión al servidor', 'danger');
     }
 }
 
@@ -307,23 +301,27 @@ async function cancelarIncidencia(idIncidencia) {
             showToast(`Incidencia #${idIncidencia} cancelada exitosamente`, 'success');
             await cargarMisIncidencias();
         } else {
-            showToast(result.message || 'No se pudo cancelar la incidencia', 'error');
+            showToast(result.message || 'No se pudo cancelar la incidencia', 'danger');
         }
     } catch (error) {
-        showToast('Error de conexión al servidor', 'error');
+        showToast('Error de conexión al servidor', 'danger');
     }
 }
 
-// Helper Functions
+// Helper Toast
 function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.classList.remove('hidden');
+    const toastEl = document.getElementById('toast');
+    const toastBody = document.getElementById('toastBody');
 
-    setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 3500);
+    if (toastEl && toastBody) {
+        toastBody.textContent = message;
+        toastEl.className = `toast align-items-center text-white border-0 bg-${type === 'danger' ? 'danger' : 'success'}`;
+
+        if (window.bootstrap) {
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+    }
 }
 
 function escapeHtml(str) {

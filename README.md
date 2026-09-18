@@ -8,13 +8,13 @@ El proyecto consiste en una aplicación web integral disponible en la intranet d
 
 ## 📋 1. Descripción General del Sistema
 
-El sistema fue diseñado bajo una arquitectura cliente-servidor (**API REST**) dividida en capas, cumpliendo con los estándares de diseño web responsivo, seguridad y trazabilidad.
+El sistema fue diseñado bajo una arquitectura cliente-servidor (**API REST**) dividida en capas, utilizando **Bootstrap 5** para una interfaz moderna, limpia y altamente responsiva, personalizada con la paleta de colores institucional verde de la Municipalidad.
 
 ### 🎭 Roles y Módulos del Sistema
 1. **Empleados Municipales (Módulo Implementado):**
-   - **Listar artículos/equipos:** Ver la lista de equipamientos activos por área y categoría.
-   - **Reportar una incidencia:** Crear un nuevo ticket de fallas para un artículo específico, asignando un nivel de prioridad y una descripción detallada.
-   - **Listar incidencias propias:** Consultar el historial de incidencias creadas por el empleado y visualizar su estado en tiempo real (Pendiente, En Proceso, Finalizada, Cancelada).
+   - **Listar artículos/equipos:** Ver la lista de equipamientos activos por área y categoría en tarjetas interactivas de Bootstrap.
+   - **Reportar una incidencia:** Crear un nuevo ticket de fallas para un artículo específico mediante un formulario estilizado en Bootstrap.
+   - **Listar incidencias propias:** Consultar el historial de incidencias creadas por el empleado en una tabla interactiva con badges de estado en tiempo real (Pendiente, En Proceso, Finalizada, Cancelada).
    - **Cancelar incidencia propia:** Permitido únicamente para incidencias que se encuentren en estado *"Pendiente"*.
 
 2. **Empleado de Sistemas (Módulos Futuros):**
@@ -36,9 +36,9 @@ El sistema fue diseñado bajo una arquitectura cliente-servidor (**API REST**) d
 │   ├── schema.sql           # Estructura de tablas PostgreSQL (areas, categorias, articulos, usuarios, estados, incidencias, incidencias_estados)
 │   └── seed.sql             # Datos iniciales de prueba para la Municipalidad de Concordia
 ├── public/                  # FRONTEND (Cliente Web)
-│   ├── index.html           # Interfaz de usuario (HTML5)
-│   ├── css/styles.css       # Estilos responsivos con paleta en verde municipal (CSS3)
-│   └── js/app.js            # Lógica cliente y consumo de API REST en JS nativo
+│   ├── index.html           # Interfaz de usuario estructurada con Bootstrap 5
+│   ├── css/styles.css       # Estilos y personalización de la paleta verde institucional
+│   └── js/app.js            # Lógica cliente, integración con Bootstrap y consumo de API REST
 ├── src/                     # BACKEND (Servidor Node.js + Express)
 │   ├── config/
 │   │   └── db.js            # Conexión a la base de datos PostgreSQL mediante el módulo 'pg'
@@ -52,7 +52,7 @@ El sistema fue diseñado bajo una arquitectura cliente-servidor (**API REST**) d
 ├── .env                     # Archivo de configuración de variables de entorno
 ├── .env.example             # Ejemplo de variables de entorno
 ├── package.json             # Dependencias del proyecto
-└── README.md                # Este archivo de instrucciones
+└── README.md                # Instrucciones del proyecto
 ```
 
 ---
@@ -142,10 +142,10 @@ node tests/empleado.test.js
 Una vez cargada la página web en `http://localhost:3000`:
 
 1. **Selector de Empleado (Simulación de Sesión):**
-   En la esquina superior derecha del encabezado, verás un desplegable con el **"Empleado activo"** (ej: *María González*, *Juan Pérez*). Puedes cambiar de empleado para ver cómo cambian automáticamente sus incidencias asignadas.
+   En la esquina superior derecha del encabezado en Bootstrap, verás un desplegable con el **"Empleado activo"** (ej: *María González*, *Juan Pérez*). Puedes cambiar de empleado para ver cómo cambian automáticamente sus incidencias asignadas.
 
 2. **Sección "Mis Incidencias":**
-   - Muestra la tabla con las incidencias reportadas por el empleado activo.
+   - Muestra la tabla en Bootstrap con las incidencias reportadas por el empleado activo.
    - Cada fila incluye la fecha, artículo, descripción, etiqueta de prioridad (Alta, Media, Baja) y estado (Pendiente, Cancelada, etc.).
    - Si una incidencia tiene el estado **"Pendiente"**, aparecerá el botón rojo **"Cancelar"**. Al presionar este botón, el estado cambiará inmediatamente a "Cancelada".
 
@@ -154,10 +154,10 @@ Una vez cargada la página web en `http://localhost:3000`:
    - Selecciona el artículo o equipo que presenta la falla.
    - Selecciona el nivel de prioridad.
    - Escribe una descripción detallada del problema y presiona **"Enviar Incidencia"**.
-   - El sistema registrará el ticket en estado "Pendiente" y te redirigirá a la tabla de mis incidencias.
+   - El sistema registrará el ticket en estado "Pendiente" y te redirigirá a la tabla de mis incidencias notificando con un Toast de Bootstrap.
 
 4. **Sección "Catálogo de Artículos":**
-   - Muestra tarjetas con los equipos registrados en la Municipalidad por categoría y área.
+   - Muestra un Grid responsivo de Bootstrap con tarjetas para los equipos registrados por categoría y área.
    - Puedes usar el campo de búsqueda en tiempo real.
    - Cada artículo cuenta con un botón *"Reportar Falla"* que te lleva directamente al formulario con ese artículo preseleccionado.
 
