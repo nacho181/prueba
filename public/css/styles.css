@@ -1,0 +1,110 @@
+/* Custom Concordia Color Palette overrides for Bootstrap */
+:root {
+    --concordia-primary: #1e6b37;
+    --concordia-dark: #144924;
+    --concordia-light: #288f4a;
+    --concordia-accent: #a3e0b5;
+    --concordia-bg-soft: #e8f5e9;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Concordia Theme Utility Classes */
+.bg-concordia-dark {
+    background-color: var(--concordia-dark) !important;
+}
+
+.bg-concordia-light {
+    background-color: var(--concordia-light) !important;
+}
+
+.text-concordia {
+    color: var(--concordia-primary) !important;
+}
+
+.text-concordia-dark {
+    color: var(--concordia-dark) !important;
+}
+
+.text-concordia-accent {
+    color: var(--concordia-accent) !important;
+}
+
+.bg-concordia-gradient {
+    background: linear-gradient(135deg, var(--concordia-primary) 0%, var(--concordia-dark) 100%) !important;
+}
+
+/* Custom Buttons */
+.btn-concordia {
+    background-color: var(--concordia-primary);
+    color: #ffffff;
+    border: none;
+}
+
+.btn-concordia:hover, .btn-concordia:focus {
+    background-color: var(--concordia-dark);
+    color: #ffffff;
+}
+
+.btn-outline-concordia {
+    color: var(--concordia-primary);
+    border-color: var(--concordia-primary);
+}
+
+.btn-outline-concordia:hover {
+    background-color: var(--concordia-primary);
+    color: #ffffff;
+}
+
+/* Table Header Customization */
+.table-concordia {
+    background-color: var(--concordia-bg-soft) !important;
+    color: var(--concordia-dark) !important;
+}
+
+.table-concordia th {
+    background-color: var(--concordia-bg-soft) !important;
+    color: var(--concordia-dark) !important;
+    font-weight: 600;
+}
+
+/* Tabs Styling */
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--concordia-primary) !important;
+    border-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--concordia-primary) !important;
+    background-color: #ffffff;
+    border-bottom: 3px solid var(--concordia-primary) !important;
+}
+
+/* Badge Customizations */
+.badge-pendiente { background-color: #fef9e7; color: #f39c12; border: 1px solid #f9e79f; }
+.badge-proceso { background-color: #ebf5fb; color: #2980b9; border: 1px solid #a9cce3; }
+.badge-finalizada { background-color: #eafaf1; color: #27ae60; border: 1px solid #a9dfbf; }
+.badge-cancelada { background-color: #f2f3f4; color: #95a5a6; border: 1px solid #d5dbdb; }
+
+.badge-prio-1 { background-color: #fadbd8; color: #d32f2f; }
+.badge-prio-2 { background-color: #fdebd0; color: #f57c00; }
+.badge-prio-3 { background-color: #d4efdf; color: #388e3c; }
+
+/* Custom Article Cards */
+.article-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+}
