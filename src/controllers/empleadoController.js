@@ -1,66 +1,78 @@
 const db = require('../config/db');
 
-// In-memory fallback database for local preview/development if PostgreSQL database is not running
+// In-memory fallback data matching the new database dump
 let localUsuarios = [
-  { id_usuario: 1, nombres: 'María', apellidos: 'González', usuario: 'mgonzalez', rol: 1, id_area: 1, area_nombre: 'Mesa de Entrada y Atención al Ciudadano' },
-  { id_usuario: 2, nombres: 'Juan', apellidos: 'Pérez', usuario: 'jperez', rol: 1, id_area: 2, area_nombre: 'Obras Públicas y Servicios' },
-  { id_usuario: 3, nombres: 'Carlos', apellidos: 'Rodríguez', usuario: 'crodriguez', rol: 1, id_area: 3, area_nombre: 'Hacienda y Finanzas' }
+  { id_usuario: 1, nombres: 'Carlos', apellidos: 'Perez', usuario: 'carper@correo.com', rol: 2, id_area: 3, area_nombre: 'Sistemas' },
+  { id_usuario: 2, nombres: 'Carmen', apellidos: 'Gomez', usuario: 'cargom@correo.com', rol: 2, id_area: 3, area_nombre: 'Sistemas' },
+  { id_usuario: 3, nombres: 'Pamela', apellidos: 'Almeida', usuario: 'pamalm@correo.com', rol: 1, id_area: 3, area_nombre: 'Sistemas' },
+  { id_usuario: 4, nombres: 'Esteban', apellidos: 'Reniero', usuario: 'estren@correo.com', rol: 3, id_area: 1, area_nombre: 'Legales' }
 ];
 
 let localArticulos = [
-  { id_articulo: 1, descripcion: 'PC Desktop Intel Core i5 - Mesa Entrada', id_area: 1, area_nombre: 'Mesa de Entrada y Atención al Ciudadano', id_categoria: 1, categoria_nombre: 'Equipos Informáticos', activo: 1 },
-  { id_articulo: 2, descripcion: 'Impresora Multifunción HP LaserJet', id_area: 1, area_nombre: 'Mesa de Entrada y Atención al Ciudadano', id_categoria: 2, categoria_nombre: 'Periféricos y Accesorios', activo: 1 },
-  { id_articulo: 3, descripcion: 'Notebook Lenovo ThinkPad - Obras Públicas', id_area: 2, area_nombre: 'Obras Públicas y Servicios', id_categoria: 1, categoria_nombre: 'Equipos Informáticos', activo: 1 },
-  { id_articulo: 4, descripcion: 'Switch de Red 24 Puertos Cisco', id_area: 2, area_nombre: 'Obras Públicas y Servicios', id_categoria: 3, categoria_nombre: 'Conectividad y Redes', activo: 1 },
-  { id_articulo: 5, descripcion: 'Lector de Código de Barras USB', id_area: 3, area_nombre: 'Hacienda y Finanzas', id_categoria: 2, categoria_nombre: 'Periféricos y Accesorios', activo: 1 }
+  { id_articulo: 1, descripcion: 'Mouse sin pilas', id_area: 1, area_nombre: 'Legales', id_categoria: 1, categoria_nombre: 'Perifericos', activo: 1 },
+  { id_articulo: 2, descripcion: 'Monitor LG', id_area: 1, area_nombre: 'Legales', id_categoria: 1, categoria_nombre: 'Perifericos', activo: 1 },
+  { id_articulo: 3, descripcion: 'Notebook HP', id_area: 1, area_nombre: 'Legales', id_categoria: 1, categoria_nombre: 'Perifericos', activo: 1 }
 ];
 
 let localIncidencias = [
   {
     id_incidencia: 1,
-    id_articulo: 2,
-    articulo_nombre: 'Impresora Multifunción HP LaserJet',
+    id_articulo: 1,
+    articulo_nombre: 'Mouse sin pilas',
     id_estado: 1,
     estado_nombre: 'Pendiente',
-    creado_por: 1,
-    creado_por_nombre: 'María González',
-    asignado_a: null,
-    creado: new Date(Date.now() - 86400000 * 2).toISOString(),
+    creado_por: 4,
+    creado_por_nombre: 'Esteban Reniero',
+    asignado_a: 1,
+    creado: '2026-09-11T18:47:38.751Z',
     prioridad: 1,
-    descripcion_pedido: 'La impresora multifunción no enciende y emite un pitido al conectar.',
-    descripcion_resolucion: null
+    descripcion_pedido: 'descripción pedido',
+    descripcion_resolucion: ''
   },
   {
     id_incidencia: 2,
     id_articulo: 1,
-    articulo_nombre: 'PC Desktop Intel Core i5 - Mesa Entrada',
+    articulo_nombre: 'Mouse sin pilas',
     id_estado: 1,
     estado_nombre: 'Pendiente',
-    creado_por: 1,
-    creado_por_nombre: 'María González',
-    asignado_a: null,
-    creado: new Date(Date.now() - 86400000).toISOString(),
-    prioridad: 2,
-    descripcion_pedido: 'El equipo de escritorio funciona muy lento al abrir el sistema de administración.',
-    descripcion_resolucion: null
+    creado_por: 4,
+    creado_por_nombre: 'Esteban Reniero',
+    asignado_a: 2,
+    creado: '2026-09-11T18:50:08.269Z',
+    prioridad: 1,
+    descripcion_pedido: 'descripción pedido',
+    descripcion_resolucion: ''
   },
   {
     id_incidencia: 3,
+    id_articulo: 2,
+    articulo_nombre: 'Monitor LG',
+    id_estado: 1,
+    estado_nombre: 'Pendiente',
+    creado_por: 4,
+    creado_por_nombre: 'Esteban Reniero',
+    asignado_a: 1,
+    creado: '2026-09-13T18:52:15.532Z',
+    prioridad: 1,
+    descripcion_pedido: 'No enciende',
+    descripcion_resolucion: ''
+  },
+  {
+    id_incidencia: 4,
     id_articulo: 3,
-    articulo_nombre: 'Notebook Lenovo ThinkPad - Obras Públicas',
-    id_estado: 4,
-    estado_nombre: 'Cancelada',
-    creado_por: 2,
-    creado_por_nombre: 'Juan Pérez',
-    asignado_a: null,
-    creado: new Date(Date.now() - 86400000 * 3).toISOString(),
-    prioridad: 3,
-    descripcion_pedido: 'El teclado de la notebook tiene floja la tecla Enter.',
-    descripcion_resolucion: null
+    articulo_nombre: 'Notebook HP',
+    id_estado: 1,
+    estado_nombre: 'Pendiente',
+    creado_por: 4,
+    creado_por_nombre: 'Esteban Reniero',
+    asignado_a: 2,
+    creado: '2026-09-13T18:52:51.346Z',
+    prioridad: 1,
+    descripcion_pedido: 'No carga la batería',
+    descripcion_resolucion: ''
   }
 ];
 
-// Helper to check DB availability
 async function isDbAvailable() {
   try {
     await db.query('SELECT 1');
@@ -75,11 +87,11 @@ exports.getEmpleados = async (req, res) => {
   try {
     if (await isDbAvailable()) {
       const query = `
-        SELECT u.id_usuario, u.nombres, u.apellidos, u.usuario, u.id_area, a.descripcion AS area_nombre
+        SELECT u.id_usuario, u.nombres, u.apellidos, u.usuario, u.id_area, u.rol, a.descripcion AS area_nombre
         FROM usuarios u
         LEFT JOIN areas a ON u.id_area = a.id_area
-        WHERE u.rol = 1 AND u.activo = 1
-        ORDER BY u.apellidos, u.nombres
+        WHERE u.activo = 1
+        ORDER BY u.id_usuario ASC
       `;
       const result = await db.query(query);
       return res.status(200).json({ status: 'success', data: result.rows });
@@ -108,7 +120,7 @@ exports.getArticulos = async (req, res) => {
         LEFT JOIN areas ar ON art.id_area = ar.id_area
         LEFT JOIN categorias cat ON art.id_categoria = cat.id_categoria
         WHERE art.activo = 1
-        ORDER BY cat.descripcion, art.descripcion
+        ORDER BY art.id_articulo ASC
       `;
       const result = await db.query(query);
       return res.status(200).json({ status: 'success', data: result.rows });
@@ -133,16 +145,16 @@ exports.crearIncidencia = async (req, res) => {
     }
 
     if (await isDbAvailable()) {
-      // Get state 'Pendiente' (id_estado = 1)
+      // In the dump, default asignado_a = 1 (Carlos Perez) or 0
       const insertQuery = `
-        INSERT INTO incidencias (id_articulo, id_estado, creado_por, prioridad, descripcion_pedido, creado)
-        VALUES ($1, 1, $2, $3, $4, CURRENT_TIMESTAMP)
+        INSERT INTO incidencias (id_articulo, id_estado, creado_por, asignado_a, prioridad, descripcion_pedido, descripcion_resolucion, creado)
+        VALUES ($1, 1, $2, 1, $3, $4, '', CURRENT_TIMESTAMP)
         RETURNING *
       `;
       const result = await db.query(insertQuery, [
         id_articulo,
         creado_por,
-        prioridad || 2,
+        prioridad || 1,
         descripcion_pedido
       ]);
 
@@ -171,11 +183,11 @@ exports.crearIncidencia = async (req, res) => {
         estado_nombre: 'Pendiente',
         creado_por: parseInt(creado_por),
         creado_por_nombre: usuario ? `${usuario.nombres} ${usuario.apellidos}` : 'Usuario',
-        asignado_a: null,
+        asignado_a: 1,
         creado: new Date().toISOString(),
-        prioridad: parseInt(prioridad) || 2,
+        prioridad: parseInt(prioridad) || 1,
         descripcion_pedido,
-        descripcion_resolucion: null
+        descripcion_resolucion: ''
       };
 
       localIncidencias.unshift(nuevaIncidencia);
@@ -223,7 +235,7 @@ exports.getMisIncidencias = async (req, res) => {
         INNER JOIN estados est ON inc.id_estado = est.id_estado
         INNER JOIN usuarios u ON inc.creado_por = u.id_usuario
         WHERE inc.creado_por = $1
-        ORDER BY inc.creado DESC
+        ORDER BY inc.id_incidencia DESC
       `;
       const result = await db.query(query, [id_usuario]);
       return res.status(200).json({ status: 'success', data: result.rows });
@@ -252,7 +264,6 @@ exports.cancelarIncidencia = async (req, res) => {
     }
 
     if (await isDbAvailable()) {
-      // Check if incident exists, belongs to employee and status is 'Pendiente' (1)
       const checkQuery = `SELECT * FROM incidencias WHERE id_incidencia = $1`;
       const checkResult = await db.query(checkQuery, [id]);
 
