@@ -1,20 +1,27 @@
+/**
+ * ============================================================================
+ * RUTAS DE LA API - MÓDULO EMPLEADOS
+ * Definición de endpoints REST para la gestión de incidencias y artículos.
+ * ============================================================================
+ */
+
 const express = require('express');
 const router = express.Router();
 const empleadoController = require('../controllers/empleadoController');
 
-// Get list of employees
+// Obtener la lista de usuarios/empleados municipales
 router.get('/usuarios/empleados', empleadoController.getEmpleados);
 
-// List active articles
+// Obtener el catálogo de artículos y equipamientos activos
 router.get('/articulos', empleadoController.getArticulos);
 
-// Create new incident
+// Crear/Reportar una nueva incidencia técnica
 router.post('/incidencias', empleadoController.crearIncidencia);
 
-// List incidents by employee
+// Obtener las incidencias reportadas por el empleado activo
 router.get('/incidencias/mis-incidencias', empleadoController.getMisIncidencias);
 
-// Cancel pending incident
+// Cancelar una incidencia propia en estado Pendiente
 router.put('/incidencias/:id/cancelar', empleadoController.cancelarIncidencia);
 
 module.exports = router;
