@@ -1,4 +1,11 @@
-/* Custom Concordia Color Palette overrides for Bootstrap */
+/* ==========================================================================
+   MUNICIPALIDAD DE CONCORDIA - TEMA INSTITUCIONAL DE COLOR VERDE
+   Hoja de estilos personalizada e integración con Bootstrap 5
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. VARIABLES DE COLOR Y PALETA MUNICIPAL
+   -------------------------------------------------------------------------- */
 :root {
     --concordia-primary: #1e6b37;
     --concordia-dark: #144924;
@@ -7,11 +14,17 @@
     --concordia-bg-soft: #e8f5e9;
 }
 
+/* --------------------------------------------------------------------------
+   2. REGLAS GENERALES Y TIPOGRAFÍA
+   -------------------------------------------------------------------------- */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Concordia Theme Utility Classes */
+/* --------------------------------------------------------------------------
+   3. CLASES DE UTILIDAD
+   (Se mantiene !important sólo en utilidades de propósito único)
+   -------------------------------------------------------------------------- */
 .bg-concordia-dark {
     background-color: var(--concordia-dark) !important;
 }
@@ -36,14 +49,17 @@ body {
     background: linear-gradient(135deg, var(--concordia-primary) 0%, var(--concordia-dark) 100%) !important;
 }
 
-/* Custom Buttons */
+/* --------------------------------------------------------------------------
+   4. COMPONENTES: BOTONES PERSONALIZADOS
+   -------------------------------------------------------------------------- */
 .btn-concordia {
     background-color: var(--concordia-primary);
     color: #ffffff;
     border: none;
 }
 
-.btn-concordia:hover, .btn-concordia:focus {
+.btn-concordia:hover,
+.btn-concordia:focus {
     background-color: var(--concordia-dark);
     color: #ffffff;
 }
@@ -58,38 +74,43 @@ body {
     color: #ffffff;
 }
 
-/* Table Header Customization */
-.table-concordia {
-    background-color: var(--concordia-bg-soft) !important;
-    color: var(--concordia-dark) !important;
-}
-
-.table-concordia th {
-    background-color: var(--concordia-bg-soft) !important;
-    color: var(--concordia-dark) !important;
+/* --------------------------------------------------------------------------
+   5. COMPONENTES: TABLAS
+   (Se elimina !important aumentando la especificidad del selector)
+   -------------------------------------------------------------------------- */
+table.table thead.table-concordia,
+table.table thead.table-concordia tr,
+table.table thead.table-concordia tr th {
+    background-color: var(--concordia-bg-soft);
+    color: var(--concordia-dark);
     font-weight: 600;
 }
 
-/* Tabs Styling */
-.nav-tabs .nav-link {
+/* --------------------------------------------------------------------------
+   6. COMPONENTES: PESTAÑAS (NAV-TABS)
+   (Se elimina !important mediante especificidad encadenada)
+   -------------------------------------------------------------------------- */
+ul.nav-tabs li.nav-item .nav-link {
     border: none;
     border-bottom: 3px solid transparent;
     padding: 0.75rem 1.25rem;
     transition: all 0.2s ease;
 }
 
-.nav-tabs .nav-link:hover {
-    color: var(--concordia-primary) !important;
+ul.nav-tabs li.nav-item .nav-link:hover {
+    color: var(--concordia-primary);
     border-color: transparent;
 }
 
-.nav-tabs .nav-link.active {
-    color: var(--concordia-primary) !important;
+ul.nav-tabs li.nav-item .nav-link.active {
+    color: var(--concordia-primary);
     background-color: #ffffff;
-    border-bottom: 3px solid var(--concordia-primary) !important;
+    border-bottom: 3px solid var(--concordia-primary);
 }
 
-/* Badge Customizations */
+/* --------------------------------------------------------------------------
+   7. COMPONENTES: ETIQUETAS Y ESTADOS (BADGES)
+   -------------------------------------------------------------------------- */
 .badge-pendiente { background-color: #fef9e7; color: #f39c12; border: 1px solid #f9e79f; }
 .badge-proceso { background-color: #ebf5fb; color: #2980b9; border: 1px solid #a9cce3; }
 .badge-finalizada { background-color: #eafaf1; color: #27ae60; border: 1px solid #a9dfbf; }
@@ -99,12 +120,17 @@ body {
 .badge-prio-2 { background-color: #fdebd0; color: #f57c00; }
 .badge-prio-3 { background-color: #d4efdf; color: #388e3c; }
 
-/* Custom Article Cards */
-.article-card {
+/* --------------------------------------------------------------------------
+   8. COMPONENTES: TARJETAS DE ARTÍCULOS
+   (Especificidad para remover !important en la sombra al pasar el cursor)
+   -------------------------------------------------------------------------- */
+div.card.card-articulo,
+div.card.article-card {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.article-card:hover {
+div.card.card-articulo:hover,
+div.card.article-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
 }
