@@ -1,335 +1,435 @@
+/**
+ * ============================================================================
+ * MUNICIPALIDAD DE CONCORDIA - MÓDULO PANEL DE EMPLEADOS
+ * Lógica de Frontend en JavaScript Nativo e Integración con Bootstrap 5
+ * ============================================================================
+ */
+
+// URL Base para las peticiones a la API REST de incidencias
 const API_BASE_URL = '/api/v1';
 
-// Global State
-let currentUsuarioId = 1;
-let empleados = [];
-let articulos = [];
-let incidencias = [];
+// Estado global de la aplicación cliente
+let currentEmpleadoId = 4; // Identificador por defecto: Esteban Reniero (ID 4)
+let listaArticulosCache = []; // Caché local para filtrado de artículos en cliente
+let bsToast = null; // Instancia global de la notificación Toast de Bootstrap
 
-// DOM Elements
+/**
+ * Evento principal DOMContentLoaded: Se gatilla cuando la estructura DOM del HTML está lista.
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    initApp();
+    // Paso 1: Inicializar el componente Toast de Bootstrap si existe en el DOM
+    const toastEl = document.getElementById('toast');
+    if (toastEl && window.bootstrap) {
+        bsToast = new bootstrap.Toast(toastEl, { delay: 4000 });
+    }
+
+    // Paso 2: Cargar datos iniciales desde el servidor
+    cargarEmpleados();
+    cargarArticulos();
+    cargarMisIncidencias();
+
+    // Paso 3: Registrar escuchadores de eventos para interactividad
+    setupEventListeners();
 });
 
-async function initApp() {
-    setupEventListeners();
-    await cargarEmpleados();
-    await cargarArticulos();
-    await cargarMisIncidencias();
-}
-
+/**
+ * Registra los escuchadores de eventos para la interacción con la interfaz.
+ */
 function setupEventListeners() {
-    // Employee Switcher
+    // Evento de cambio en el desplegable de empleado activo (Simulación de sesión)
     const selectEmpleado = document.getElementById('selectEmpleado');
-    selectEmpleado.addEventListener('change', (e) => {
-        currentUsuarioId = parseInt(e.target.value);
-        cargarMisIncidencias();
-        showToast('Empleado activo actualizado', 'success');
-    });
+    if (selectEmpleado) {
+        selectEmpleado.addEventListener('change', (e) => {
+            currentEmpleadoId = parseInt(e.target.value, 10);
+            cargarMisIncidencias();
+            mostrarToast(`Empleado activo cambiado a: ${selectEmpleado.options[selectEmpleado.selectedIndex].text}`, 'info');
+        });
+    }
 
-    // Refresh Button
-    document.getElementById('btnRefreshIncidencias').addEventListener('click', () => {
-        cargarMisIncidencias();
-        showToast('Incidencias actualizadas', 'success');
-    });
+    // Evento para el botón de actualización manual de la lista de incidencias
+    const btnRefresh = document.getElementById('btnRefreshIncidencias');
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', () => {
+            cargarMisIncidencias();
+            mostrarToast('Lista de incidencias actualizada', 'info');
+        });
+    }
 
-    // Create Incident Form
+    // Evento para el formulario de reporte de nueva incidencia
     const formNuevaIncidencia = document.getElementById('formNuevaIncidencia');
-    formNuevaIncidencia.addEventListener('submit', handleCrearIncidencia);
+    if (formNuevaIncidencia) {
+        formNuevaIncidencia.addEventListener('submit', crearIncidencia);
+    }
 
-    // Search Articles
+    // Evento de búsqueda dinámica sobre la lista de artículos
     const searchArticulos = document.getElementById('searchArticulos');
-    searchArticulos.addEventListener('input', (e) => {
-        filtrarArticulos(e.target.value);
-    });
-}
-
-function switchTab(tabButtonId) {
-    const triggerEl = document.getElementById(tabButtonId);
-    if (triggerEl && window.bootstrap) {
-        const tab = new bootstrap.Tab(triggerEl);
-        tab.show();
+    if (searchArticulos) {
+        searchArticulos.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            filtrarArticulos(query);
+        });
     }
 }
 
-// 1. Fetch Employees
+/**
+ * Muestra una notificación emergente (Toast de Bootstrap) en la esquina inferior.
+ * @param {string} mensaje - Texto explicativo de la notificación.
+ * @param {string} tipo - Tipo de notificación ('exito', 'error', 'info').
+ */
+function mostrarToast(mensaje, tipo = 'exito') {
+    const toastEl = document.getElementById('toast');
+    const toastBody = document.getElementById('toastBody');
+
+    if (!toastEl || !toastBody) return;
+
+    // Configurar color de fondo según la categoría del mensaje
+    toastEl.className = 'toast align-items-center text-white border-0';
+    if (tipo === 'exito') {
+        toastEl.classList.add('bg-concordia-light');
+    } else if (tipo === 'error' || tipo === 'danger') {
+        toastEl.classList.add('bg-danger');
+    } else {
+        toastEl.classList.add('bg-secondary');
+    }
+
+    toastBody.textContent = mensaje;
+    if (bsToast) bsToast.show();
+}
+
+/**
+ * Obtiene del backend la lista de empleados activos y llena el selector superior.
+ * @returns {Promise<void>}
+ */
 async function cargarEmpleados() {
     try {
+        // Paso 1: Petición HTTP GET al endpoint de usuarios empleados
         const response = await fetch(`${API_BASE_URL}/usuarios/empleados`);
+        if (!response.ok) throw new Error('Error al obtener empleados');
+
+        // Paso 2: Parsear respuesta del servidor
         const result = await response.json();
+        const empleados = Array.isArray(result) ? result : (result.data || []);
 
-        if (result.status === 'success') {
-            empleados = result.data;
-            const selectEmpleado = document.getElementById('selectEmpleado');
-            selectEmpleado.innerHTML = '';
+        const select = document.getElementById('selectEmpleado');
+        if (!select) return;
 
-            empleados.forEach(emp => {
-                const option = document.createElement('option');
-                option.value = emp.id_usuario;
-                option.textContent = `${emp.nombres} ${emp.apellidos} (${emp.area_nombre || 'Empleado Municipal'})`;
-                selectEmpleado.appendChild(option);
-            });
+        select.innerHTML = '';
 
-            if (empleados.length > 0) {
-                currentUsuarioId = empleados[0].id_usuario;
+        // Paso 3: Renderizar cada empleado como opción del desplegable
+        empleados.forEach(emp => {
+            const option = document.createElement('option');
+            option.value = emp.id_usuario;
+            option.textContent = `${emp.nombres} ${emp.apellidos} (${emp.area_descripcion || emp.area_nombre || 'Empleado Municipal'})`;
+            if (emp.id_usuario === currentEmpleadoId) {
+                option.selected = true;
             }
-        }
+            select.appendChild(option);
+        });
     } catch (error) {
-        showToast('Error al cargar la lista de empleados', 'danger');
+        console.error('Error cargando empleados:', error);
     }
 }
 
-// 2. Fetch Articles
+/**
+ * Obtiene del backend el catálogo de artículos y actualiza el formulario y las tarjetas.
+ * @returns {Promise<void>}
+ */
 async function cargarArticulos() {
     try {
+        // Paso 1: Petición HTTP GET al endpoint de artículos
         const response = await fetch(`${API_BASE_URL}/articulos`);
-        const result = await response.json();
+        if (!response.ok) throw new Error('Error al obtener artículos');
 
-        if (result.status === 'success') {
-            articulos = result.data;
-            renderArticulosSelect(articulos);
-            renderArticulosGrid(articulos);
+        // Paso 2: Parsear la lista de artículos
+        const result = await response.json();
+        listaArticulosCache = Array.isArray(result) ? result : (result.data || []);
+
+        // Paso 3: Poblar el menú desplegable del formulario
+        const selectArticulo = document.getElementById('selectArticulo');
+        if (selectArticulo) {
+            selectArticulo.innerHTML = '<option value="">-- Seleccionar Artículo --</option>';
+
+            listaArticulosCache.forEach(art => {
+                const option = document.createElement('option');
+                option.value = art.id_articulo;
+                option.textContent = `${art.descripcion} - [Categoría: ${art.categoria_descripcion || art.categoria_nombre || 'Gral'}, Área: ${art.area_descripcion || art.area_nombre || 'Gral'}]`;
+                selectArticulo.appendChild(option);
+            });
         }
+
+        // Paso 4: Renderizar la cuadrícula de tarjetas de artículos
+        renderizarGridArticulos(listaArticulosCache);
     } catch (error) {
-        showToast('Error al cargar el catálogo de artículos', 'danger');
+        console.error('Error cargando artículos:', error);
     }
 }
 
-function renderArticulosSelect(lista) {
-    const selectArticulo = document.getElementById('selectArticulo');
-    selectArticulo.innerHTML = '<option value="">-- Seleccionar Artículo --</option>';
+/**
+ * Renderiza el catálogo de artículos en una grilla de tarjetas Bootstrap.
+ * @param {Array<Object>} articulos - Lista de artículos a visualizar.
+ */
+function renderizarGridArticulos(articulos) {
+    const container = document.getElementById('gridArticulos');
+    if (!container) return;
 
-    lista.forEach(art => {
-        const option = document.createElement('option');
-        option.value = art.id_articulo;
-        option.textContent = `${art.descripcion} - [${art.categoria_nombre || 'Gral'} / ${art.area_nombre || 'Gral'}]`;
-        selectArticulo.appendChild(option);
-    });
-}
+    container.innerHTML = '';
 
-function renderArticulosGrid(lista) {
-    const gridContainer = document.getElementById('gridArticulos');
-    gridContainer.innerHTML = '';
-
-    if (lista.length === 0) {
-        gridContainer.innerHTML = '<div class="col-12 text-center text-muted py-4">No se encontraron artículos.</div>';
+    // Manejo de estado vacío sin resultados
+    if (!articulos || articulos.length === 0) {
+        container.innerHTML = `<div class="col-12 text-center text-muted py-4">No se encontraron artículos que coincidan con la búsqueda.</div>`;
         return;
     }
 
-    lista.forEach(art => {
+    // Generar tarjeta para cada artículo registrado
+    articulos.forEach(art => {
         const col = document.createElement('div');
         col.className = 'col-md-6 col-lg-4';
         col.innerHTML = `
-            <div class="card h-100 shadow-sm border-0 article-card p-3">
-                <div class="card-body d-flex flex-column justify-content-between p-0">
-                    <div>
-                        <h4 class="h6 fw-bold text-concordia-dark mb-2">${escapeHtml(art.descripcion)}</h4>
-                        <p class="small text-muted mb-3">
-                            <strong>Categoría:</strong> ${escapeHtml(art.categoria_nombre || 'N/A')}<br>
-                            <strong>Área:</strong> ${escapeHtml(art.area_nombre || 'N/A')}
-                        </p>
+            <div class="card card-articulo h-100 shadow-sm rounded-3">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-concordia-light text-white">${art.categoria_descripcion || art.categoria_nombre || 'Periféricos'}</span>
+                        <small class="text-muted">ID: #${art.id_articulo}</small>
                     </div>
-                    <button class="btn btn-sm btn-outline-concordia w-100 mt-2 fw-semibold" onclick="seleccionarArticuloParaReporte(${art.id_articulo})">
-                        Reportar Falla
-                    </button>
+                    <h5 class="card-title fw-bold text-concordia-dark mb-1">${escapeHtml(art.descripcion)}</h5>
+                    <p class="card-text small text-muted mb-3">Área asignada: <strong>${escapeHtml(art.area_descripcion || art.area_nombre || 'General')}</strong></p>
+                    <div class="mt-auto">
+                        <button onclick="seleccionarArticuloParaIncidencia(${art.id_articulo})" class="btn btn-sm btn-outline-concordia w-100 fw-semibold">
+                            Reportar Falla
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
-        gridContainer.appendChild(col);
+        container.appendChild(col);
     });
 }
 
+/**
+ * Filtra los artículos en tiempo real según la consulta ingresada.
+ * @param {string} query - Término de búsqueda.
+ */
 function filtrarArticulos(query) {
-    const q = query.toLowerCase();
-    const filtrados = articulos.filter(art =>
-        art.descripcion.toLowerCase().includes(q) ||
-        (art.categoria_nombre && art.categoria_nombre.toLowerCase().includes(q)) ||
-        (art.area_nombre && art.area_nombre.toLowerCase().includes(q))
+    if (!query) {
+        renderizarGridArticulos(listaArticulosCache);
+        return;
+    }
+
+    // Filtrar por coincidencia en descripción, categoría o área
+    const filtrados = listaArticulosCache.filter(art =>
+        (art.descripcion && art.descripcion.toLowerCase().includes(query)) ||
+        (art.categoria_descripcion && art.categoria_descripcion.toLowerCase().includes(query)) ||
+        (art.categoria_nombre && art.categoria_nombre.toLowerCase().includes(query)) ||
+        (art.area_descripcion && art.area_descripcion.toLowerCase().includes(query)) ||
+        (art.area_nombre && art.area_nombre.toLowerCase().includes(query))
     );
-    renderArticulosGrid(filtrados);
+
+    renderizarGridArticulos(filtrados);
 }
 
-function seleccionarArticuloParaReporte(idArticulo) {
-    switchTab('btn-nueva-incidencia');
+/**
+ * Preselecciona un artículo y cambia a la pestaña del formulario de incidencias.
+ * @param {number} idArticulo - Identificador del artículo a seleccionar.
+ */
+function seleccionarArticuloParaIncidencia(idArticulo) {
     const selectArticulo = document.getElementById('selectArticulo');
-    selectArticulo.value = idArticulo;
+    if (selectArticulo) {
+        selectArticulo.value = idArticulo;
+    }
+
+    // Cambiar a la pestaña "Reportar Nueva Incidencia" usando Bootstrap Tab
+    const tabBtn = document.getElementById('btn-nueva-incidencia');
+    if (tabBtn && window.bootstrap) {
+        const tabTrigger = new bootstrap.Tab(tabBtn);
+        tabTrigger.show();
+    }
+
+    mostrarToast('Artículo seleccionado. Describe la falla a continuación.', 'info');
 }
 
-// 3. Fetch Incidents
+/**
+ * Consulta al servidor la lista de incidencias asociadas al empleado activo.
+ * @returns {Promise<void>}
+ */
 async function cargarMisIncidencias() {
     const tbody = document.getElementById('tbodyIncidencias');
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Cargando incidencias...</td></tr>';
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Cargando incidencias...</td></tr>`;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/incidencias/mis-incidencias?id_usuario=${currentUsuarioId}`);
+        // Paso 1: Petición HTTP GET parametrizada con id_usuario
+        const response = await fetch(`${API_BASE_URL}/incidencias/mis-incidencias?id_usuario=${currentEmpleadoId}`);
+        if (!response.ok) throw new Error('Error al obtener incidencias');
+
+        // Paso 2: Parsear el listado de incidencias
         const result = await response.json();
+        const incidencias = Array.isArray(result) ? result : (result.data || []);
+        tbody.innerHTML = '';
 
-        if (result.status === 'success') {
-            incidencias = result.data;
-            renderIncidenciasTabla(incidencias);
+        if (incidencias.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No tienes incidencias registradas.</td></tr>`;
+            return;
         }
-    } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Error al obtener las incidencias.</td></tr>';
-        showToast('Error al obtener las incidencias', 'danger');
-    }
-}
 
-function renderIncidenciasTabla(lista) {
-    const tbody = document.getElementById('tbodyIncidencias');
-    tbody.innerHTML = '';
+        // Paso 3: Renderizar filas de la tabla de incidencias
+        incidencias.forEach(inc => {
+            const tr = document.createElement('tr');
 
-    if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No tienes incidencias registradas.</td></tr>';
-        return;
-    }
+            // Determinar etiqueta visual (Badge) para el estado
+            let badgeEstado = '';
+            const estadoNom = (inc.estado_descripcion || inc.estado_nombre || 'Pendiente').toLowerCase();
+            if (estadoNom.includes('pendiente') || inc.id_estado === 1) {
+                badgeEstado = '<span class="badge bg-warning text-dark">Pendiente</span>';
+            } else if (estadoNom.includes('proceso') || inc.id_estado === 2) {
+                badgeEstado = '<span class="badge bg-info text-dark">En Proceso</span>';
+            } else if (estadoNom.includes('resuela') || estadoNom.includes('resuelta') || estadoNom.includes('finalizada') || inc.id_estado === 3) {
+                badgeEstado = '<span class="badge bg-success">Resuelta</span>';
+            } else if (estadoNom.includes('cancelada') || inc.id_estado === 4) {
+                badgeEstado = '<span class="badge bg-secondary">Cancelada</span>';
+            } else {
+                badgeEstado = `<span class="badge bg-light text-dark">${escapeHtml(inc.estado_descripcion || 'Sin estado')}</span>`;
+            }
 
-    lista.forEach(inc => {
-        const tr = document.createElement('tr');
+            // Determinar etiqueta visual para el nivel de prioridad
+            let badgePrioridad = '';
+            if (inc.prioridad === 1) {
+                badgePrioridad = '<span class="badge bg-danger">Alta</span>';
+            } else if (inc.prioridad === 2) {
+                badgePrioridad = '<span class="badge bg-warning text-dark">Media</span>';
+            } else {
+                badgePrioridad = '<span class="badge bg-info text-dark">Baja</span>';
+            }
 
-        const fechaFormateada = new Date(inc.creado).toLocaleDateString('es-AR', {
-            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            // Formatear la fecha de creación
+            const fechaFormateada = new Date(inc.creado).toLocaleDateString('es-AR', {
+                year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+            });
+
+            // Permitir cancelación sólo si la incidencia está en estado Pendiente
+            const esPendiente = (inc.id_estado === 1 || estadoNom.includes('pendiente'));
+            const botonAccion = esPendiente
+                ? `<button onclick="cancelarIncidencia(${inc.id_incidencia})" class="btn btn-sm btn-outline-danger fw-semibold">Cancelar</button>`
+                : `<span class="text-muted small">Sin acciones</span>`;
+
+            tr.innerHTML = `
+                <td class="fw-bold">#${inc.id_incidencia}</td>
+                <td class="small">${fechaFormateada}</td>
+                <td class="fw-semibold">${escapeHtml(inc.articulo_descripcion || inc.articulo_nombre || 'Artículo #' + inc.id_articulo)}</td>
+                <td class="small text-wrap" style="max-width: 250px;">${escapeHtml(inc.descripcion_pedido || '')}</td>
+                <td>${badgePrioridad}</td>
+                <td>${badgeEstado}</td>
+                <td class="text-end">${botonAccion}</td>
+            `;
+
+            tbody.appendChild(tr);
         });
 
-        // Priority Badge
-        let prioBadge = '<span class="badge badge-prio-2">Media</span>';
-        if (inc.prioridad === 1) prioBadge = '<span class="badge badge-prio-1">Alta</span>';
-        if (inc.prioridad === 3) prioBadge = '<span class="badge badge-prio-3">Baja</span>';
-
-        // Status Badge
-        const estadoNombre = inc.estado_nombre || getEstadoNombre(inc.id_estado);
-        let estadoBadge = `<span class="badge badge-pendiente">${estadoNombre}</span>`;
-        if (inc.id_estado === 2) estadoBadge = `<span class="badge badge-proceso">${estadoNombre}</span>`;
-        if (inc.id_estado === 3) estadoBadge = `<span class="badge badge-finalizada">${estadoNombre}</span>`;
-        if (inc.id_estado === 4) estadoBadge = `<span class="badge badge-cancelada">${estadoNombre}</span>`;
-
-        // Action Button
-        let accionesHtml = '<span class="text-muted">-</span>';
-        if (inc.id_estado === 1) { // Only allow cancel if 'Pendiente'
-            accionesHtml = `
-                <button class="btn btn-sm btn-danger px-2 py-1 fw-semibold" onclick="cancelarIncidencia(${inc.id_incidencia})">
-                    Cancelar
-                </button>
-            `;
-        }
-
-        tr.innerHTML = `
-            <td class="fw-bold">#${inc.id_incidencia}</td>
-            <td class="small">${fechaFormateada}</td>
-            <td>${escapeHtml(inc.articulo_nombre || 'Artículo #' + inc.id_articulo)}</td>
-            <td class="small">${escapeHtml(inc.descripcion_pedido)}</td>
-            <td>${prioBadge}</td>
-            <td>${estadoBadge}</td>
-            <td class="text-end">${accionesHtml}</td>
-        `;
-
-        tbody.appendChild(tr);
-    });
-}
-
-function getEstadoNombre(idEstado) {
-    switch (idEstado) {
-        case 1: return 'Pendiente';
-        case 2: return 'En Proceso';
-        case 3: return 'Finalizada';
-        case 4: return 'Cancelada';
-        default: return 'Desconocido';
+    } catch (error) {
+        console.error('Error cargando incidencias:', error);
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error al cargar datos. Intente nuevamente.</td></tr>`;
     }
 }
 
-// 4. Create Incident
-async function handleCrearIncidencia(e) {
+/**
+ * Maneja el envío del formulario para crear un nuevo registro de incidencia.
+ * @param {Event} e - Evento de submit del formulario.
+ * @returns {Promise<void>}
+ */
+async function crearIncidencia(e) {
     e.preventDefault();
 
-    const id_articulo = document.getElementById('selectArticulo').value;
-    const prioridad = document.getElementById('selectPrioridad').value;
+    const id_articulo = parseInt(document.getElementById('selectArticulo').value, 10);
+    const prioridad = parseInt(document.getElementById('selectPrioridad').value, 10);
     const descripcion_pedido = document.getElementById('txtDescripcion').value.trim();
 
+    // Validar campos requeridos
     if (!id_articulo || !descripcion_pedido) {
-        showToast('Por favor completa todos los campos requeridos', 'danger');
+        mostrarToast('Por favor completa todos los campos requeridos.', 'error');
         return;
     }
 
     try {
+        // Paso 1: Petición HTTP POST al backend con el cuerpo JSON
         const response = await fetch(`${API_BASE_URL}/incidencias`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                id_articulo: parseInt(id_articulo),
-                creado_por: currentUsuarioId,
-                prioridad: parseInt(prioridad),
+                id_articulo,
+                creado_por: currentEmpleadoId,
+                prioridad,
                 descripcion_pedido
             })
         });
 
-        const result = await response.json();
-
-        if (response.ok && result.status === 'success') {
-            showToast('Incidencia registrada con éxito', 'success');
-            document.getElementById('formNuevaIncidencia').reset();
-            await cargarMisIncidencias();
-            switchTab('btn-mis-incidencias');
-        } else {
-            showToast(result.message || 'Error al crear la incidencia', 'danger');
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.mensaje || errData.message || 'Error al crear la incidencia');
         }
+
+        // Paso 2: Notificar éxito y limpiar formulario
+        mostrarToast('¡Incidencia creada exitosamente!', 'exito');
+        document.getElementById('formNuevaIncidencia').reset();
+
+        // Paso 3: Recargar incidencias y alternar a la pestaña principal
+        await cargarMisIncidencias();
+        const tabBtn = document.getElementById('btn-mis-incidencias');
+        if (tabBtn && window.bootstrap) {
+            const tabTrigger = new bootstrap.Tab(tabBtn);
+            tabTrigger.show();
+        }
+
     } catch (error) {
-        showToast('Error de conexión al servidor', 'danger');
+        console.error('Error creando incidencia:', error);
+        mostrarToast(`Error: ${error.message}`, 'error');
     }
 }
 
-// 5. Cancel Pending Incident
+/**
+ * Envía una solicitud PUT para cancelar una incidencia propia en estado Pendiente.
+ * @param {number} idIncidencia - ID de la incidencia a cancelar.
+ * @returns {Promise<void>}
+ */
 async function cancelarIncidencia(idIncidencia) {
-    if (!confirm(`¿Está seguro de que desea cancelar la incidencia #${idIncidencia}?`)) {
+    if (!confirm(`¿Estás seguro de que deseas cancelar la incidencia #${idIncidencia}?`)) {
         return;
     }
 
     try {
+        // Paso 1: Petición HTTP PUT para cancelar la incidencia
         const response = await fetch(`${API_BASE_URL}/incidencias/${idIncidencia}/cancelar`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id_usuario: currentUsuarioId
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_usuario: currentEmpleadoId })
         });
 
-        const result = await response.json();
+        const data = await response.json();
 
-        if (response.ok && result.status === 'success') {
-            showToast(`Incidencia #${idIncidencia} cancelada exitosamente`, 'success');
-            await cargarMisIncidencias();
-        } else {
-            showToast(result.message || 'No se pudo cancelar la incidencia', 'danger');
+        if (!response.ok) {
+            throw new Error(data.mensaje || data.message || 'No se pudo cancelar la incidencia');
         }
+
+        // Paso 2: Notificar éxito y refrescar la tabla
+        mostrarToast(`Incidencia #${idIncidencia} cancelada correctamente.`, 'exito');
+        await cargarMisIncidencias();
+
     } catch (error) {
-        showToast('Error de conexión al servidor', 'danger');
+        console.error('Error cancelando incidencia:', error);
+        mostrarToast(`Error: ${error.message}`, 'error');
     }
 }
 
-// Helper Toast
-function showToast(message, type = 'success') {
-    const toastEl = document.getElementById('toast');
-    const toastBody = document.getElementById('toastBody');
-
-    if (toastEl && toastBody) {
-        toastBody.textContent = message;
-        toastEl.className = `toast align-items-center text-white border-0 bg-${type === 'danger' ? 'danger' : 'success'}`;
-
-        if (window.bootstrap) {
-            const toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        }
-    }
-}
-
+/**
+ * Función de utilidad para sanear cadenas de caracteres HTML y prevenir ataques XSS.
+ * @param {string} str - Cadena de texto a procesar.
+ * @returns {string} Cadena sanitizada.
+ */
 function escapeHtml(str) {
     if (!str) return '';
-    return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }

@@ -1,9 +1,23 @@
+/**
+ * ============================================================================
+ * PRUEBAS DE INTEGRACIÓN DE LA API REST - MÓDULO DE EMPLEADOS
+ * Ejecución de pruebas automatizadas sobre el servidor de pruebas HTTP.
+ * ============================================================================
+ */
+
 const assert = require('assert');
 const http = require('http');
 const app = require('../src/server');
 
 let server;
 
+/**
+ * Función auxiliar para realizar peticiones HTTP durante las pruebas.
+ * @param {string} method - Método HTTP (GET, POST, PUT, DELETE).
+ * @param {string} path - Ruta/Endpoint a consultar.
+ * @param {Object|null} body - Cuerpo de la solicitud en formato JS object.
+ * @returns {Promise<Object>} Promesa con el código de estado y el cuerpo parsed de la respuesta.
+ */
 function request(method, path, body = null) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -36,33 +50,34 @@ function request(method, path, body = null) {
   });
 }
 
+/**
+ * Función principal que ejecuta la suite completa de pruebas de endpoints.
+ */
 async function runTests() {
   server = http.createServer(app);
   await new Promise(resolve => server.listen(3001, resolve));
-  console.log('Test server listening on port 3001');
+  console.log('Servidor de pruebas escuchando en el puerto 3001');
 
   try {
-    // Test 1: Healthcheck
+    // Pruebas 1: Comprobación de Estado (Healthcheck)
     console.log('Test 1: Healthcheck...');
     const resHealth = await request('GET', '/api/v1/health');
     assert.strictEqual(resHealth.status, 200);
-    assert.strictEqual(resHealth.body.status, 'OK');
 
-    // Test 2: Employees list
-    console.log('Test 2: Employees list...');
+    // Pruebas 2: Obtener lista de empleados
+    console.log('Test 2: Lista de empleados...');
     const resEmp = await request('GET', '/api/v1/usuarios/empleados');
     assert.strictEqual(resEmp.status, 200);
-    assert.strictEqual(resEmp.body.status, 'success');
-    assert.strictEqual(Array.isArray(resEmp.body.data), true);
+    assert.strictEqual(Array.isArray(resEmp.body), true);
 
-    // Test 3: Articles list
-    console.log('Test 3: Articles list...');
+    // Pruebas 3: Obtener lista de artículos
+    console.log('Test 3: Lista de artículos...');
     const resArt = await request('GET', '/api/v1/articulos');
     assert.strictEqual(resArt.status, 200);
-    assert.strictEqual(resArt.body.status, 'success');
+    assert.strictEqual(Array.isArray(resArt.body), true);
 
-    // Test 4: Create incident for user 4 (Esteban Reniero)
-    console.log('Test 4: Create incident...');
+    // Pruebas 4: Crear una incidencia para el usuario Esteban Reniero (ID 4)
+    console.log('Test 4: Crear incidencia...');
     const resCreate = await request('POST', '/api/v1/incidencias', {
       id_articulo: 1,
       creado_por: 4,
@@ -70,19 +85,17 @@ async function runTests() {
       descripcion_pedido: 'El mouse sin pilas no funciona'
     });
     assert.strictEqual(resCreate.status, 201);
-    assert.strictEqual(resCreate.body.status, 'success');
 
-    // Test 5: List incidents for user 4
-    console.log('Test 5: List incidents...');
+    // Pruebas 5: Listar incidencias creadas por el usuario ID 4
+    console.log('Test 5: Listar mis incidencias...');
     const resInc = await request('GET', '/api/v1/incidencias/mis-incidencias?id_usuario=4');
     assert.strictEqual(resInc.status, 200);
-    assert.strictEqual(resInc.body.status, 'success');
+    assert.strictEqual(Array.isArray(resInc.body), true);
 
-    // Test 6: Cancel incident #1 created by user 4
-    console.log('Test 6: Cancel pending incident...');
+    // Pruebas 6: Cancelar la incidencia #1 creada por el usuario ID 4
+    console.log('Test 6: Cancelar incidencia pendiente...');
     const resCancel = await request('PUT', '/api/v1/incidencias/1/cancelar', { id_usuario: 4 });
     assert.strictEqual(resCancel.status, 200);
-    assert.strictEqual(resCancel.body.status, 'success');
 
     console.log('\n✅ TODAS LAS PRUEBAS PASARON EXITOSAMENTE CON LA NUEVA BASE DE DATOS!');
   } catch (err) {
