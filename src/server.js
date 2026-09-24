@@ -12,9 +12,11 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const empleadoRoutes = require('./routes/empleadoRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 
 // ============================================================================
 // MIDDLEWARES DE LA APLICACIÓN
@@ -36,6 +38,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Prefijo de versión de API REST (/api/v1)
 app.use('/api/v1', empleadoRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Ruta de Comprobación de Salud del Servidor (Healthcheck)
 app.get('/api/v1/health', (req, res) => {
