@@ -8,6 +8,7 @@
 
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 const morgan = require('morgan');
 require('dotenv').config();
 
@@ -17,10 +18,12 @@ const authRoutes = require('./routes/authRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
 // ============================================================================
 // MIDDLEWARES DE LA APLICACIÓN
 // ============================================================================
+
+// Control de acceso HTTP (CORS)
+app.use(cors());
 
 // Morgan: Registro detallado de solicitudes HTTP en consola
 app.use(morgan('dev'));
@@ -49,9 +52,20 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
-// Ruta por defecto para SPA o fallback HTML
+// Ruta por defecto para SPA o fallback HTML (debe ir antes del error handler)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// ============================================================================
+// MANEJADOR GLOBAL DE ERRORES (Middleware de 4 parámetros)
+// ============================================================================
+app.use((err, req, res, next) => {
+  console.error('[ERROR NO CONTROLADO]:', err.stack || err.message);
+  res.status(err.status || 500).json({
+    error: true,
+    mensaje: err.message || 'Error interno del servidor'
+  });
 });
 
 // ============================================================================
