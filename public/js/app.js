@@ -183,7 +183,7 @@ function mostrarVistaAutenticada() {
     // Mapear nombres y roles
     if (currentUser) {
         document.getElementById('lblUsuarioNombre').textContent = `${currentUser.nombres} ${currentUser.apellidos}`;
-        
+
         let nombreRol = 'Empleado';
         if (currentUser.rol === 1) nombreRol = 'Empleado Municipal';
         if (currentUser.rol === 2) nombreRol = 'Empleado de Sistemas';
