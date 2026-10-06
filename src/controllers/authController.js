@@ -58,7 +58,8 @@ const login = async (req, res) => {
       rol: usuarioAutenticado.rol
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    const jwtSecret = process.env.JWT_SECRET || 'secreto_concordia_jwt_2026';
+    const token = jwt.sign(payload, jwtSecret, {
       expiresIn: '8h'
     });
 

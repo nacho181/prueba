@@ -10,7 +10,7 @@
 const API_BASE_URL = '/api/v1';
 
 // Variables de estado local
-let tokenJWT = localStorage.getItem('token') || '';
+let tokenJWT = localStorage.getItem('jwt_token') || localStorage.getItem('token') || '';
 let empleadosSistemas = [];
 let incidenciaSeleccionadaModal = null;
 let bsToastDirector = null;
@@ -20,6 +20,20 @@ let modalAsignarInstance = null;
  * Evento principal DOMContentLoaded
  */
 document.addEventListener('DOMContentLoaded', () => {
+    // Verificar autenticación y validar que sea el Director de Sistemas (rol = 3)
+    let userData = null;
+    try {
+        userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+    } catch (e) {
+        userData = null;
+    }
+
+    if (!tokenJWT || !userData || (userData.rol !== 3 && userData.usuario !== 'estren@correo.com')) {
+        console.warn('Acceso denegado: Usuario no autorizado para el Panel de Director');
+        window.location.href = 'index.html';
+        return;
+    }
+
     // Inicializar notificación Toast
     const toastEl = document.getElementById('toast');
     if (toastEl && window.bootstrap) {
@@ -66,6 +80,17 @@ function getAuthHeaders() {
  * Configura las acciones e interactividad del panel.
  */
 function setupEventListenersDirector() {
+    // Botón para cerrar sesión
+    const btnLogout = document.getElementById('btnLogoutDirector');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user_data');
+            window.location.href = 'index.html';
+        });
+    }
+
     // Botón de refrescar gestión de incidencias
     const btnRefresh = document.getElementById('btnRefreshGestion');
     if (btnRefresh) {
@@ -171,11 +196,24 @@ async function cargarDashboard() {
                 data.prioritarias.forEach(inc => {
                     const tr = document.createElement('tr');
                     const fechaFmt = new Date(inc.creado).toLocaleDateString('es-AR');
+
+                    let badgeEstado = '<span class="badge bg-secondary">Cancelada</span>';
+                    const estadoNom = (inc.estado_descripcion || '').toLowerCase();
+                    if (estadoNom.includes('pendiente') || inc.id_estado === 1) {
+                        badgeEstado = '<span class="badge bg-warning text-dark">Pendiente</span>';
+                    } else if (estadoNom.includes('proceso') || inc.id_estado === 2) {
+                        badgeEstado = '<span class="badge bg-info text-dark">En Proceso</span>';
+                    } else if (estadoNom.includes('resuel') || estadoNom.includes('finalizada') || inc.id_estado === 3) {
+                        badgeEstado = '<span class="badge bg-success">Resuelta</span>';
+                    } else if (estadoNom.includes('cancel') || inc.id_estado === 4) {
+                        badgeEstado = '<span class="badge bg-secondary">Cancelada</span>';
+                    }
+
                     tr.innerHTML = `
                         <td class="fw-bold">#${inc.id_incidencia}</td>
                         <td class="small">${fechaFmt}</td>
                         <td class="small fw-semibold">${escapeHtml(inc.articulo_descripcion || 'Artículo')} - ${escapeHtml(inc.descripcion_pedido || '')}</td>
-                        <td><span class="badge bg-warning text-dark">${escapeHtml(inc.estado_descripcion || 'Pendiente')}</span></td>
+                        <td>${badgeEstado}</td>
                         <td class="small text-muted">${escapeHtml(inc.asignado_nombre || 'Sin Asignar')}</td>
                     `;
                     tbodyPrio.appendChild(tr);

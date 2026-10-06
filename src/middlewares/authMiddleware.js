@@ -23,7 +23,8 @@ const verificarToken = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decodificado = jwt.verify(token, process.env.JWT_SECRET);
+    const jwtSecret = process.env.JWT_SECRET || 'secreto_concordia_jwt_2026';
+    const decodificado = jwt.verify(token, jwtSecret);
     req.usuario = decodificado;
     next();
   } catch (error) {

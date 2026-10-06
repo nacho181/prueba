@@ -104,10 +104,17 @@ async function manejarLogin(e) {
         authToken = data.token;
         currentUser = data.usuario;
         localStorage.setItem('jwt_token', authToken);
+        localStorage.setItem('token', authToken);
         localStorage.setItem('user_data', JSON.stringify(currentUser));
 
         mostrarToast(`Bienvenido/a, ${currentUser.nombres}!`, 'exito');
         document.getElementById('formLogin').reset();
+
+        // Si es Director de Sistemas (rol 3 o estren@correo.com), redireccionar exclusivamente al Panel Director
+        if (currentUser.rol === 3 || currentUser.usuario === 'estren@correo.com') {
+            window.location.href = 'director.html';
+            return;
+        }
 
         mostrarVistaAutenticada();
     } catch (error) {
@@ -152,6 +159,7 @@ async function verificarSesion() {
  */
 function cerrarSesion() {
     localStorage.removeItem('jwt_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('user_data');
     authToken = null;
     currentUser = null;
@@ -173,12 +181,24 @@ function mostrarVistaLogin() {
  * Muestra el panel principal y carga los datos de acuerdo al usuario.
  */
 function mostrarVistaAutenticada() {
+    // Si el usuario autenticado es Director de Sistemas, redireccionar al Panel de Director
+    if (currentUser && (currentUser.rol === 3 || currentUser.usuario === 'estren@correo.com')) {
+        window.location.href = 'director.html';
+        return;
+    }
+
     document.getElementById('loginSection').classList.add('d-none');
     document.getElementById('appSection').classList.remove('d-none');
 
     const navProfile = document.getElementById('userProfileNav');
     navProfile.classList.remove('d-none');
     navProfile.classList.add('d-flex');
+
+    // Ocultar botón del Director para usuarios estándar (rol != 3)
+    const btnLinkDirector = document.getElementById('btnLinkDirector');
+    if (btnLinkDirector) {
+        btnLinkDirector.classList.add('d-none');
+    }
 
     // Mapear nombres y roles
     if (currentUser) {
