@@ -6,8 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node tests/empleado.test.js && node tests/sistemas_notificaciones.test.js",
-    "test:sistemas": "node tests/sistemas_notificaciones.test.js"
+    "test": "node tests/empleado.test.js && node tests/sistemas_notificaciones.test.js && node tests/entidades_base.test.js",
+    "test:sistemas": "node tests/sistemas_notificaciones.test.js",
+    "test:entidades": "node tests/entidades_base.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
