@@ -92,9 +92,10 @@ async function runTests() {
     assert.strictEqual(resInc.status, 200);
     assert.strictEqual(Array.isArray(resInc.body), true);
 
-    // Pruebas 6: Cancelar la incidencia #1 creada por el usuario ID 4
+    // Pruebas 6: Cancelar la incidencia creada por el usuario ID 4
     console.log('Test 6: Cancelar incidencia pendiente...');
-    const resCancel = await request('PUT', '/api/v1/incidencias/1/cancelar', { id_usuario: 4 });
+    const idParaCancelar = resCreate.body.incidencia ? resCreate.body.incidencia.id_incidencia : 1;
+    const resCancel = await request('PUT', `/api/v1/incidencias/${idParaCancelar}/cancelar`, { id_usuario: 4 });
     assert.strictEqual(resCancel.status, 200);
 
     console.log('\n✅ TODAS LAS PRUEBAS PASARON EXITOSAMENTE CON LA NUEVA BASE DE DATOS!');
@@ -103,6 +104,7 @@ async function runTests() {
     process.exitCode = 1;
   } finally {
     server.close();
+    process.exit(process.exitCode || 0);
   }
 }
 

@@ -106,13 +106,20 @@ async function manejarLogin(e) {
         localStorage.setItem('jwt_token', authToken);
         localStorage.setItem('token', authToken);
         localStorage.setItem('user_data', JSON.stringify(currentUser));
+        localStorage.setItem('usuario', JSON.stringify(currentUser));
 
         mostrarToast(`Bienvenido/a, ${currentUser.nombres}!`, 'exito');
         document.getElementById('formLogin').reset();
 
-        // Si es Director de Sistemas (rol 3 o estren@correo.com), redireccionar exclusivamente al Panel Director
+        // Si es Director de Sistemas (rol 3 o estren@correo.com), redireccionar al Panel Director
         if (currentUser.rol === 3 || currentUser.usuario === 'estren@correo.com') {
             window.location.href = 'director.html';
+            return;
+        }
+
+        // Si es Empleado de Sistemas (rol 2), redireccionar al Panel Técnico de Sistemas
+        if (currentUser.rol === 2) {
+            window.location.href = 'sistemas.html';
             return;
         }
 
@@ -161,6 +168,7 @@ function cerrarSesion() {
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('token');
     localStorage.removeItem('user_data');
+    localStorage.removeItem('usuario');
     authToken = null;
     currentUser = null;
     mostrarVistaLogin();
@@ -197,7 +205,21 @@ function mostrarVistaAutenticada() {
     // Ocultar botón del Director para usuarios estándar (rol != 3)
     const btnLinkDirector = document.getElementById('btnLinkDirector');
     if (btnLinkDirector) {
-        btnLinkDirector.classList.add('d-none');
+        if (currentUser && currentUser.rol === 3) {
+            btnLinkDirector.classList.remove('d-none');
+        } else {
+            btnLinkDirector.classList.add('d-none');
+        }
+    }
+
+    // Mostrar botón de acceso al Panel de Sistemas para roles 2 y 3
+    const btnLinkSistemas = document.getElementById('btnLinkSistemas');
+    if (btnLinkSistemas) {
+        if (currentUser && (currentUser.rol === 2 || currentUser.rol === 3)) {
+            btnLinkSistemas.classList.remove('d-none');
+        } else {
+            btnLinkSistemas.classList.add('d-none');
+        }
     }
 
     // Mapear nombres y roles

@@ -17,15 +17,15 @@ El sistema fue diseñado bajo una arquitectura cliente-servidor (**API REST**) d
    - **Listar incidencias propias:** Consultar el historial de incidencias creadas por el empleado en una tabla interactiva con badges de estado en tiempo real (Pendiente, En Proceso, Finalizada, Cancelada).
    - **Cancelar incidencia propia:** Permitido únicamente para incidencias que se encuentren en estado *"Pendiente"*.
 
-2. **Empleado de Sistemas (Módulos Futuros):**
-   - Listar incidencias asignadas a su cargo.
-   - Finalizar incidencias ingresando la descripción de resolución.
-   - Gestión BREAD (Browse, Read, Edit, Add, Delete) de Categorías y Artículos.
+2. **Empleado de Sistemas (Módulo Implementado):**
+   - **Listar incidencias asignadas:** Consultar en tiempo real los tickets técnicos asignados a su cargo filtrados por estado y prioridad en tarjetas interactivas y tablas de Bootstrap.
+   - **Finalizar incidencias:** Finalizar incidencias asignadas registrando obligatoriamente la descripción detallada de la solución técnica aplicada (actualizando el estado a *Resuelta/Finalizada* y su trazabilidad).
+   - **Notificaciones por Correo Electrónico:** Envío automático de correo electrónico al empleado solicitante al finalizar la incidencia (con la resolución técnica) o al cancelarse la misma.
 
-3. **Director de Sistemas (Módulos Futuros):**
+3. **Director de Sistemas (Módulo Implementado):**
    - Dashboard con indicadores y estadísticas por estado, fecha y prioridad.
    - Asignar incidencias a los empleados del área de Sistemas.
-   - Generación de reportes en PDF y notificaciones.
+   - Cancelar incidencias y generar reportes estadísticos en PDF.
 
 ---
 
@@ -35,21 +35,37 @@ El sistema fue diseñado bajo una arquitectura cliente-servidor (**API REST**) d
 ├── database/
 │   └── incidencias_db.sql   # Dump de PostgreSQL con la estructura de tablas y datos iniciales de la Municipalidad de Concordia
 ├── public/                  # FRONTEND (Cliente Web)
-│   ├── index.html           # Interfaz de usuario estructurada con Bootstrap 5
+│   ├── index.html           # Interfaz para empleados municipales y login de acceso
+│   ├── director.html        # Panel de supervisión del Director de Sistemas
+│   ├── sistemas.html        # Panel del Empleado de Sistemas (Incidencias asignadas y resolución)
 │   ├── css/styles.css       # Estilos y personalización de la paleta verde institucional
-│   └── js/app.js            # Lógica cliente, integración con Bootstrap y consumo de API REST
+│   └── js/
+│       ├── app.js           # Lógica cliente y navegación de empleados municipales
+│       ├── director.js      # Lógica del dashboard de Director
+│       └── sistemas.js      # Lógica de incidencias asignadas, finalización y modal
 ├── src/                     # BACKEND (Servidor Node.js + Express)
 │   ├── config/
 │   │   └── db.js            # Conexión a la base de datos PostgreSQL mediante el módulo 'pg'
 │   ├── controllers/
-│   │   └── empleadoController.js # Lógica de negocio de incidencias y artículos
+│   │   ├── authController.js     # Autenticación, JWT y hashing SHA-256
+│   │   ├── directorController.js # Lógica de métricas y asignaciones
+│   │   ├── empleadoController.js # Incidencias y artículos municipales
+│   │   └── sistemasController.js # Incidencias asignadas y finalización
+│   ├── middlewares/
+│   │   └── authMiddleware.js     # Validación de JWT y control de acceso (RBAC)
 │   ├── routes/
-│   │   └── empleadoRoutes.js     # Endpoints REST (/api/v1/...)
+│   │   ├── authRoutes.js         # Rutas de autenticación (/api/v1/auth)
+│   │   ├── directorRoutes.js     # Rutas de Director (/api/v1/director)
+│   │   ├── empleadoRoutes.js     # Rutas de Empleados (/api/v1)
+│   │   └── sistemasRoutes.js     # Rutas de Empleado de Sistemas (/api/v1/sistemas)
+│   ├── services/
+│   │   └── emailService.js       # Servicio Nodemailer para envío de correos
 │   └── server.js            # Archivo PRINCIPAL del servidor Express
 ├── tests/
-│   └── empleado.test.js     # Pruebas integradas de API REST
+│   ├── empleado.test.js               # Pruebas integradas del módulo Empleados
+│   └── sistemas_notificaciones.test.js # Pruebas integradas de Sistemas y Correos
 ├── .env                     # Archivo de configuración de variables de entorno
-├── .env.example             # Ejemplo de variables de entorno
+├── .env.example             # Ejemplo de variables de entorno (incluye SMTP)
 ├── package.json             # Dependencias del proyecto
 └── README.md                # Instrucciones del proyecto
 ```
@@ -161,11 +177,21 @@ Una vez cargada la página web en `http://localhost:3000`:
 
 | Método | Endpoint | Parámetros / Body | Descripción |
 | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/login` | `{ usuario, contrasenia }` | Inicio de sesión con SHA-256 y retorno de token JWT |
+| `GET` | `/api/v1/auth/me` | Header `Authorization: Bearer <token>` | Obtiene los datos del usuario autenticado |
 | `GET` | `/api/v1/usuarios/empleados` | Ninguno | Devuelve la lista de empleados municipales activos |
 | `GET` | `/api/v1/articulos` | Ninguno | Devuelve el catálogo de artículos registrados |
 | `GET` | `/api/v1/incidencias/mis-incidencias` | `?id_usuario=1` | Devuelve las incidencias creadas por el empleado |
 | `POST` | `/api/v1/incidencias` | `{ id_articulo, creado_por, prioridad, descripcion_pedido }` | Crea una nueva incidencia técnica |
-| `PUT` | `/api/v1/incidencias/:id/cancelar` | `{ id_usuario }` | Cancela una incidencia propia en estado Pendiente |
+| `PUT` | `/api/v1/incidencias/:id/cancelar` | `{ id_usuario }` | Cancela incidencia propia en Pendiente y notifica por email |
+| `GET` | `/api/v1/sistemas/incidencias` | JWT (Rol 2 o 3) | Lista incidencias asignadas al empleado de Sistemas (Int. 4) |
+| `PUT` | `/api/v1/sistemas/incidencias/:id/finalizar` | `{ descripcion_resolucion }` | Finaliza la incidencia y envía notificación por correo (Int. 4) |
+| `GET` | `/api/v1/director/dashboard` | JWT (Rol 3) | Resumen del dashboard de dirección |
+| `GET` | `/api/v1/director/empleados-sistemas`| JWT (Rol 3) | Lista empleados del área de Sistemas |
+| `GET` | `/api/v1/director/incidencias` | JWT (Rol 3) | Todas las incidencias del municipio |
+| `PUT` | `/api/v1/director/incidencias/:id/asignar` | `{ asignado_a }` | Asigna incidencia a técnico de Sistemas |
+| `PUT` | `/api/v1/director/incidencias/:id/cancelar`| Ninguno | Cancela incidencia y notifica por email |
+| `GET` | `/api/v1/director/reportes` | JWT (Rol 3) | Métricas para reporte PDF |
 | `GET` | `/api/v1/health` | Ninguno | Estado de salud del servidor y la API |
 
 ---
