@@ -15,6 +15,7 @@ require('dotenv').config();
 const empleadoRoutes = require('./routes/empleadoRoutes');
 const authRoutes = require('./routes/authRoutes');
 const directorRoutes = require('./routes/directorRoutes');
+const sistemasRoutes = require('./routes/sistemasRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +45,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/api/v1', empleadoRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/director', directorRoutes);
+app.use('/api/v1/sistemas', sistemasRoutes);
 
 // Ruta de Comprobación de Salud del Servidor (Healthcheck)
 app.get('/api/v1/health', (req, res) => {

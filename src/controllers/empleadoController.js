@@ -7,6 +7,7 @@
  */
 
 const db = require('../config/db');
+const emailService = require('../services/emailService');
 
 // Datos iniciales de simulación en memoria (Respaldo resiliente)
 let mockUsuarios = [
@@ -224,6 +225,30 @@ exports.cancelarIncidencia = async (req, res) => {
     `;
     await db.query(estadoQuery, [id, id_estado_cancelado]);
 
+    // Consultar datos del usuario y artículo para la notificación por correo
+    try {
+      const uRes = await db.query(
+        `SELECT u.nombres, u.apellidos, u.usuario AS email, art.descripcion AS articulo_desc
+         FROM public.usuarios u
+         JOIN public.incidencias inc ON inc.creado_por = u.id_usuario
+         JOIN public.articulos art ON inc.id_articulo = art.id_articulo
+         WHERE inc.id_incidencia = $1`,
+        [id]
+      );
+      if (uRes.rows.length > 0) {
+        const u = uRes.rows[0];
+        await emailService.notificarIncidenciaCancelada({
+          incidencia: updateResult.rows[0],
+          destinatarioEmail: u.email,
+          destinatarioNombre: `${u.nombres} ${u.apellidos}`,
+          canceladoPorNombre: `${u.nombres} ${u.apellidos} (Solicitante)`,
+          articuloDescripcion: u.articulo_desc
+        });
+      }
+    } catch (mailErr) {
+      console.error('[EMAIL ERROR] Error enviando correo de cancelación:', mailErr.message);
+    }
+
     return res.json({
       mensaje: 'Incidencia cancelada correctamente',
       incidencia: updateResult.rows[0]
@@ -249,6 +274,16 @@ exports.cancelarIncidencia = async (req, res) => {
 
     inc.id_estado = 4;
     inc.estado_descripcion = 'Cancelada';
+
+    // Disparar notificación simulada
+    const usrMock = mockUsuarios.find(u => u.id_usuario === userId);
+    emailService.notificarIncidenciaCancelada({
+      incidencia: inc,
+      destinatarioEmail: usrMock ? usrMock.usuario : 'usuario@correo.com',
+      destinatarioNombre: usrMock ? `${usrMock.nombres} ${usrMock.apellidos}` : 'Empleado Municipal',
+      canceladoPorNombre: usrMock ? `${usrMock.nombres} ${usrMock.apellidos} (Solicitante)` : 'El solicitante',
+      articuloDescripcion: inc.articulo_descripcion
+    }).catch(e => console.warn('[EMAIL SIMULADO ERROR]:', e.message));
 
     return res.json({
       mensaje: 'Incidencia cancelada correctamente (Modo simulación)',

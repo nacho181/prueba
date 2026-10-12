@@ -6,6 +6,7 @@
  */
 
 const db = require('../config/db');
+const emailService = require('../services/emailService');
 
 // Datos de respaldo en memoria cuando PostgreSQL no esté disponible
 let mockSistemasEmpleados = [
@@ -224,6 +225,30 @@ exports.cancelarIncidenciaDirector = async (req, res) => {
     `;
     await db.query(estadoQuery, [id, id_estado_cancelada]);
 
+    // Consultar datos del creador y artículo para la notificación por correo
+    try {
+      const uRes = await db.query(
+        `SELECT u.nombres, u.apellidos, u.usuario AS email, art.descripcion AS articulo_desc
+         FROM public.usuarios u
+         JOIN public.incidencias inc ON inc.creado_por = u.id_usuario
+         JOIN public.articulos art ON inc.id_articulo = art.id_articulo
+         WHERE inc.id_incidencia = $1`,
+        [id]
+      );
+      if (uRes.rows.length > 0) {
+        const u = uRes.rows[0];
+        await emailService.notificarIncidenciaCancelada({
+          incidencia: updateResult.rows[0],
+          destinatarioEmail: u.email,
+          destinatarioNombre: `${u.nombres} ${u.apellidos}`,
+          canceladoPorNombre: 'Director de Sistemas',
+          articuloDescripcion: u.articulo_desc
+        });
+      }
+    } catch (mailErr) {
+      console.error('[EMAIL ERROR] Error enviando correo de cancelación (Director):', mailErr.message);
+    }
+
     return res.json({
       mensaje: 'Incidencia cancelada exitosamente',
       incidencia: updateResult.rows[0]
@@ -243,6 +268,15 @@ exports.cancelarIncidenciaDirector = async (req, res) => {
 
     inc.id_estado = 4;
     inc.estado_descripcion = 'Cancelada';
+
+    // Disparar notificación simulada
+    emailService.notificarIncidenciaCancelada({
+      incidencia: inc,
+      destinatarioEmail: 'estren@correo.com',
+      destinatarioNombre: inc.usuario_creador || 'Empleado Municipal',
+      canceladoPorNombre: 'Director de Sistemas',
+      articuloDescripcion: inc.articulo_descripcion
+    }).catch(e => console.warn('[EMAIL SIMULADO ERROR]:', e.message));
 
     return res.json({
       mensaje: 'Incidencia cancelada exitosamente (Modo simulación)',
