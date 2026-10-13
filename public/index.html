@@ -28,6 +28,9 @@
 
             <!-- Acceso a Módulos y Perfil de usuario -->
             <div id="userProfileNav" class="d-none align-items-center gap-3 mt-2 mt-sm-0">
+                <a href="entidades.html" id="btnLinkEntidades" class="btn btn-outline-light btn-sm fw-semibold me-2">
+                    <i class="bi bi-folder2-open me-1"></i> Entidades Base
+                </a>
                 <a href="sistemas.html" id="btnLinkSistemas" class="btn btn-outline-light btn-sm fw-semibold me-2 d-none">
                     <i class="bi bi-tools me-1"></i> Panel Sistemas
                 </a>
@@ -211,8 +214,16 @@
                 <!-- Tab 3: Artículos -->
                 <div class="tab-pane fade" id="tab-articulos" role="tabpanel">
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-                        <h3 class="h5 fw-bold text-concordia-dark mb-0">Artículos y Equipamientos Registrados</h3>
-                        <input type="text" id="searchArticulos" class="form-control form-control-sm" style="max-width: 300px;" placeholder="Buscar por artículo, área o categoría...">
+                        <div>
+                            <h3 class="h5 fw-bold text-concordia-dark mb-0">Artículos y Equipamientos Registrados</h3>
+                            <span class="small text-muted">Catálogo para reporte de incidencias</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="searchArticulos" class="form-control form-control-sm" style="max-width: 250px;" placeholder="Buscar por artículo, área o categoría...">
+                            <a href="entidades.html" class="btn btn-sm btn-outline-concordia fw-semibold">
+                                <i class="bi bi-gear me-1"></i> Administrar BREAD
+                            </a>
+                        </div>
                     </div>
 
                     <div class="row g-3" id="gridArticulos">

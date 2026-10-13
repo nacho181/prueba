@@ -16,6 +16,9 @@ const empleadoRoutes = require('./routes/empleadoRoutes');
 const authRoutes = require('./routes/authRoutes');
 const directorRoutes = require('./routes/directorRoutes');
 const sistemasRoutes = require('./routes/sistemasRoutes');
+const categoriaRoutes = require('./routes/categoriaRoutes');
+const articuloRoutes = require('./routes/articuloRoutes');
+const areaRoutes = require('./routes/areaRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +43,11 @@ app.use(express.static(path.join(__dirname, '../public')));
 // ============================================================================
 // RUTAS DE LA API REST Y COMPROBACIÓN DE SALUD
 // ============================================================================
+
+// Entidades Base: BREAD de Categorías y Artículos, y consulta de Áreas
+app.use('/api/v1/categorias', categoriaRoutes);
+app.use('/api/v1/articulos', articuloRoutes);
+app.use('/api/v1/areas', areaRoutes);
 
 // Prefijo de versión de API REST (/api/v1)
 app.use('/api/v1', empleadoRoutes);

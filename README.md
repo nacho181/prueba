@@ -140,9 +140,13 @@ Una vez iniciado el servidor, abre tu navegador (Chrome, Firefox, Edge, etc.) e 
 👉 **`http://localhost:3000`**
 
 ### 4. Ejecución de Pruebas Automáticas (Opcional)
-Para verificar que todos los endpoints de la API funcionen correctamente, ejecuta en otra terminal:
+Para verificar que todos los endpoints de la API funcionen correctamente, ejecuta en la terminal:
 ```bash
-node tests/empleado.test.js
+# Ejecutar suite completa (Empleados, Sistemas, Entidades Base):
+npm test
+
+# O ejecutar específicamente la suite de BREAD de Categorías y Artículos con Soft Deletes:
+npm run test:entidades
 ```
 
 ---
@@ -180,7 +184,19 @@ Una vez cargada la página web en `http://localhost:3000`:
 | `POST` | `/api/v1/auth/login` | `{ usuario, contrasenia }` | Inicio de sesión con SHA-256 y retorno de token JWT |
 | `GET` | `/api/v1/auth/me` | Header `Authorization: Bearer <token>` | Obtiene los datos del usuario autenticado |
 | `GET` | `/api/v1/usuarios/empleados` | Ninguno | Devuelve la lista de empleados municipales activos |
-| `GET` | `/api/v1/articulos` | Ninguno | Devuelve el catálogo de artículos registrados |
+| `GET` | `/api/v1/categorias` | `?incluir_inactivos=true&buscar=...` | **[BREAD - Categorías]** Browse: Lista categorías (activas por defecto) |
+| `GET` | `/api/v1/categorias/:id` | Ninguno | **[BREAD - Categorías]** Read: Detalle de categoría por ID |
+| `POST` | `/api/v1/categorias` | `{ descripcion }` | **[BREAD - Categorías]** Add: Crea nueva categoría activa (`activo = 1`) |
+| `PUT` | `/api/v1/categorias/:id` | `{ descripcion, activo }` | **[BREAD - Categorías]** Edit: Actualiza categoría existente |
+| `DELETE` | `/api/v1/categorias/:id`| Ninguno | **[BREAD - Categorías]** Delete: **Soft Delete** (baja lógica `activo = 0`, sin borrado físico) |
+| `PUT` | `/api/v1/categorias/:id/reactivar` | Ninguno | Reactiva una categoría en baja lógica (`activo = 1`) |
+| `GET` | `/api/v1/articulos` | `?incluir_inactivos=true&id_categoria=..&id_area=..` | **[BREAD - Artículos]** Browse: Lista artículos con categoría y área |
+| `GET` | `/api/v1/articulos/:id` | Ninguno | **[BREAD - Artículos]** Read: Detalle de artículo por ID con relaciones |
+| `POST` | `/api/v1/articulos` | `{ descripcion, id_categoria, id_area }` | **[BREAD - Artículos]** Add: Crea nuevo artículo activo (`activo = 1`) |
+| `PUT` | `/api/v1/articulos/:id` | `{ descripcion, id_categoria, id_area, activo }` | **[BREAD - Artículos]** Edit: Actualiza artículo existente |
+| `DELETE` | `/api/v1/articulos/:id` | Ninguno | **[BREAD - Artículos]** Delete: **Soft Delete** (baja lógica `activo = 0`, sin borrado físico) |
+| `PUT` | `/api/v1/articulos/:id/reactivar` | Ninguno | Reactiva un artículo en baja lógica (`activo = 1`) |
+| `GET` | `/api/v1/areas` | Ninguno | Devuelve las áreas municipales activas |
 | `GET` | `/api/v1/incidencias/mis-incidencias` | `?id_usuario=1` | Devuelve las incidencias creadas por el empleado |
 | `POST` | `/api/v1/incidencias` | `{ id_articulo, creado_por, prioridad, descripcion_pedido }` | Crea una nueva incidencia técnica |
 | `PUT` | `/api/v1/incidencias/:id/cancelar` | `{ id_usuario }` | Cancela incidencia propia en Pendiente y notifica por email |
