@@ -23,7 +23,7 @@
         <div class="container d-flex flex-wrap justify-content-between align-items-center">
             <!-- Marca e Identidad Institucional -->
             <div class="d-flex align-items-center gap-3">
-                <div class="badge-logo bg-concordia-light text-white fw-bold px-3 py-2 rounded">MC</div>
+                <a href="index.html" class="badge-logo bg-concordia-light text-white fw-bold px-3 py-2 rounded text-decoration-none logo-mc-interactive" title="Volver al Inicio">MC</a>
                 <div>
                     <h1 class="h5 mb-0 fw-bold text-white">Municipalidad de Concordia</h1>
                     <span class="small text-concordia-accent">Área de Sistemas • Panel del Director</span>
@@ -34,12 +34,6 @@
             <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
                 <a href="entidades.html" class="btn btn-sm btn-outline-light me-1 fw-semibold">
                     <i class="bi bi-folder2-open me-1"></i> Entidades Base
-                </a>
-                <a href="sistemas.html" class="btn btn-sm btn-outline-light me-1 fw-semibold">
-                    Panel Sistemas
-                </a>
-                <a href="index.html" class="btn btn-sm btn-outline-light me-2 fw-semibold">
-                    Intranet
                 </a>
                 <span class="badge bg-concordia-light text-white p-2 me-2">Rol: Director de Sistemas</span>
                 <button id="btnLogoutDirector" class="btn btn-sm btn-outline-light fw-semibold">
@@ -72,11 +66,6 @@
                 <div>
                     <h2 class="h4 fw-bold mb-1">Panel de Control y Supervisión General</h2>
                     <p class="mb-0 text-white-50">Resumen ejecutivo, asignación de incidencias técnicas y reportes estadísticos</p>
-                </div>
-                <div class="mt-3 mt-md-0">
-                    <button id="btnGenerarPDF" class="btn btn-light fw-bold text-concordia-dark shadow-sm">
-                        Generar Reporte Estadístico (PDF)
-                    </button>
                 </div>
             </div>
         </section>
@@ -236,8 +225,11 @@
                             <h2 class="h4 fw-bold text-concordia-dark mb-1">MUNICIPALIDAD DE CONCORDIA</h2>
                             <p class="small text-muted mb-0">Dirección del Área de Sistemas — Reporte Estadístico de Incidencias Técnicas</p>
                         </div>
-                        <div class="text-end">
+                        <div class="text-end d-flex flex-column align-items-end gap-2">
                             <span id="reporteFechaEmision" class="small text-muted">Fecha de emisión: --/--/----</span>
+                            <button id="btnGenerarPDF" class="btn btn-sm btn-concordia fw-bold shadow-sm" data-html2pdf-ignore="true">
+                                Generar Reporte Estadístico (PDF)
+                            </button>
                         </div>
                     </div>
 

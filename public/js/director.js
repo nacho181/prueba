@@ -237,7 +237,9 @@ async function cargarEmpleadosSistemas() {
 
         if (!response.ok) throw new Error('Error al cargar personal de sistemas');
 
-        empleadosSistemas = await response.json();
+        const data = await response.json();
+        // Filtrar usuarios garantizando que sólo tengan rol = 2 (Empleado de sistemas)
+        empleadosSistemas = Array.isArray(data) ? data.filter(emp => emp.rol === 2) : [];
 
         const select = document.getElementById('selectSistemasEmpleado');
         if (select) {
@@ -299,11 +301,15 @@ async function cargarGestionIncidencias() {
                 badgeEst = '<span class="badge bg-secondary">Cancelada</span>';
             }
 
-            // Botón para Asignar
-            const btnAsignar = `<button onclick="abrirModalAsignar(${inc.id_incidencia})" class="btn btn-sm btn-outline-concordia me-1 fw-semibold">Asignar</button>`;
+            const esCancelada = (inc.id_estado === 4 || estadoNom.includes('cancel'));
+            const esPendiente = (inc.id_estado === 1 || estadoNom.includes('pendiente'));
+
+            // Botón para Asignar (Deshabilitado si está Cancelada)
+            const btnAsignar = esCancelada
+                ? `<button class="btn btn-sm btn-outline-secondary me-1 fw-semibold" disabled title="Incidencia cancelada">Asignar</button>`
+                : `<button onclick="abrirModalAsignar(${inc.id_incidencia})" class="btn btn-sm btn-outline-concordia me-1 fw-semibold">Asignar</button>`;
 
             // Botón para Cancelar (Soft delete habilitado únicamente si está Pendiente)
-            const esPendiente = (inc.id_estado === 1 || estadoNom.includes('pendiente'));
             const btnCancelar = esPendiente
                 ? `<button onclick="cancelarIncidenciaDirector(${inc.id_incidencia})" class="btn btn-sm btn-outline-danger fw-semibold">Cancelar</button>`
                 : `<span class="text-muted small">N/A</span>`;
