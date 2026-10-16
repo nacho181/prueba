@@ -61,12 +61,28 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function verificarUsuarioCabecera() {
     const lblUser = document.getElementById('lblUserHeader');
+    const lblUserRol = document.getElementById('lblUserRolHeader');
+    const btnLogout = document.getElementById('btnLogoutHeader');
+
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user_data');
+            window.location.href = 'index.html';
+        });
+    }
+
     try {
         const raw = localStorage.getItem('user_data');
         if (raw) {
             const user = JSON.parse(raw);
             if (lblUser && user && user.nombres) {
-                lblUser.textContent = `${user.nombres} ${user.apellidos} (${user.rol === 3 ? 'Director' : user.rol === 2 ? 'Sistemas' : 'Empleado'})`;
+                lblUser.textContent = `${user.nombres} ${user.apellidos || ''}`.trim();
+            }
+            if (lblUserRol && user) {
+                const rolTexto = user.rol === 3 ? 'Director de Sistemas' : user.rol === 2 ? 'Empleado de Sistemas' : 'Empleado Municipal';
+                lblUserRol.textContent = rolTexto;
             }
         }
     } catch (e) {
