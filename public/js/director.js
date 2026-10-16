@@ -52,6 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
         fechaEl.textContent = `Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`;
     }
 
+    // Actualizar nombre y rol en la cabecera si están disponibles
+    const lblNombre = document.getElementById('lblDirectorNombre');
+    if (lblNombre && userData.nombres) {
+        lblNombre.textContent = `${userData.nombres} ${userData.apellidos || ''}`.trim();
+    }
+
     // Cargar datos iniciales
     cargarDashboard();
     cargarEmpleadosSistemas();
