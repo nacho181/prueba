@@ -134,3 +134,20 @@ div.card.article-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
 }
+
+/* --------------------------------------------------------------------------
+   9. COMPONENTES: LOGO INTERACTIVO "MC"
+   -------------------------------------------------------------------------- */
+.logo-mc-interactive {
+    display: inline-block;
+    cursor: pointer;
+    transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.logo-mc-interactive:hover,
+.logo-mc-interactive:focus {
+    transform: scale(1.08);
+    background-color: var(--concordia-primary) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    color: #ffffff !important;
+}

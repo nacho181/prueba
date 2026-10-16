@@ -11,8 +11,7 @@ const emailService = require('../services/emailService');
 // Datos de respaldo en memoria cuando PostgreSQL no esté disponible
 let mockSistemasEmpleados = [
   { id_usuario: 1, nombres: 'Carlos', apellidos: 'Perez', id_area: 3, area_descripcion: 'Sistemas', rol: 2 },
-  { id_usuario: 2, nombres: 'Carmen', apellidos: 'Gomez', id_area: 3, area_descripcion: 'Sistemas', rol: 2 },
-  { id_usuario: 3, nombres: 'Pamela', apellidos: 'Almeida', id_area: 3, area_descripcion: 'Sistemas', rol: 1 }
+  { id_usuario: 2, nombres: 'Carmen', apellidos: 'Gomez', id_area: 3, area_descripcion: 'Sistemas', rol: 2 }
 ];
 
 let mockIncidenciasDirector = [
@@ -97,6 +96,7 @@ exports.getDashboardSummary = async (req, res) => {
 
 /**
  * Obtiene la lista de empleados del área de Sistemas para asignación de incidencias.
+ * Se filtra estrictamente por rol = 2 (empleados de sistemas).
  */
 exports.getEmpleadosSistemas = async (req, res) => {
   try {
@@ -104,13 +104,13 @@ exports.getEmpleadosSistemas = async (req, res) => {
       SELECT u.id_usuario, u.nombres, u.apellidos, u.usuario, u.rol, u.activo, a.descripcion AS area_descripcion
       FROM public.usuarios u
       JOIN public.areas a ON u.id_area = a.id_area
-      WHERE u.id_area = 3 AND u.activo = 1
+      WHERE u.id_area = 3 AND u.activo = 1 AND u.rol = 2
       ORDER BY u.apellidos ASC
     `;
     const result = await db.query(queryText);
     return res.json(result.rows);
   } catch (error) {
-    return res.json(mockSistemasEmpleados);
+    return res.json(mockSistemasEmpleados.filter(e => e.rol === 2));
   }
 };
 
